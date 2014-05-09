@@ -1,0 +1,1 @@
+1. Handle underscore in aegis when comparing strings; possibly replace with space?
