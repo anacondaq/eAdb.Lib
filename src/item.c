@@ -66,7 +66,7 @@ item_w * itemdb_load(const char * filename) {
       script_level = 0;
       field_level = 0;
 
-      // initialize item database
+      // initialize item entry
       item_database[item_count].id = FIELD_INT_EMPTY;
       item_database[item_count].aegis = NULL;
       item_database[item_count].eathena = NULL;
@@ -127,7 +127,7 @@ item_w * itemdb_load(const char * filename) {
                case 19:  item_database[item_count].script = convert_string(item_fld); break;
                case 20:  item_database[item_count].onequip = convert_string(item_fld); break;
                case 21:  item_database[item_count].onunequip = convert_string(item_fld); break;
-               default:  fprintf(stdout,"warn: invalid field column %s\n", item_fld); break;
+               default:  fprintf(stdout,"warn: itemdb_load invalid field column %s\n", item_fld); break;
             }
             read_fld = 0;
             field_level++;
@@ -143,12 +143,12 @@ item_w * itemdb_load(const char * filename) {
       }
 
       // check for missing fields
-      if(field_level == ITEM_COLUMNS) 
-         fprintf(stdout,"warn: missing field %s: %s", filename, item_buf);
+      if(field_level != ITEM_COLUMNS) 
+         fprintf(stdout,"warn: itemdb_load missing field expected %d got %d from %s: %s", ITEM_COLUMNS, field_level, filename, item_buf);
 
       // check for missing brackets
       if(script_level)
-         fprintf(stdout,"warn: missing bracket %s: %s", filename, item_buf);
+         fprintf(stdout,"warn: itemdb_load missing bracket %s: %s", filename, item_buf);
 
       item_count++;
    }
@@ -194,7 +194,7 @@ item_w * itemdb_unload(item_w * wrapper) {
 }
 
 // IO interface for item database
-// item_w * wrapper - any valid item databse that was loaded successfully.
+// item_w * wrapper - any valid item database that was loaded successfully.
 void itemdb_read(item_t item) {
    if(item.id >= 0) printf("%d,",item.id); else printf(",");   
    printf("%s,",item.aegis);
@@ -297,6 +297,12 @@ static char * itemdb_trim(const char * filename, int32_t * size) {
    int32_t field_level = 0;
    int32_t i = 0;
 
+   // check if paramaters are valid
+   if(filename == NULL || size == NULL) {
+      fprintf(stdout,"warn: itemdb_trim detected NULL paramaters.\n");
+      return NULL;
+   }
+
    // failed to allocate temporary filename
    trim_filename = random_string(16);
    if(trim_filename == NULL) {
@@ -304,7 +310,7 @@ static char * itemdb_trim(const char * filename, int32_t * size) {
       return NULL;
    }
 
-   // failed to open original and temporary files
+   // failed to open original or temporary files
    itemdb_file = fopen(filename,"r");
    itemdb_trim = fopen(trim_filename,"w");
    if(itemdb_file == NULL || itemdb_trim == NULL) {
@@ -328,13 +334,13 @@ static char * itemdb_trim(const char * filename, int32_t * size) {
                      script_level++;
                   else if(item_buf[i] == '}')
                      script_level--;
-                  else if(item_buf[i] == ',' && !script_level)
+                  else if((item_buf[i] == ',' || item_buf[i] == '\n' || item_buf[i] == '\0') && !script_level)
                      field_level++;
 
                if(script_level)
-                  fprintf(stdout,"warn: missing bracket %s: %s", filename, item_buf);
+                  fprintf(stdout,"warn: itemdb_trim missing bracket %s: %s", filename, item_buf);
                else if(field_level != ITEM_COLUMNS)
-                  fprintf(stdout,"warn: missing field %s: %s", filename, item_buf);
+                  fprintf(stdout,"warn: itemdb_trim missing field %s: %s", filename, item_buf);
                else {
                   fprintf(itemdb_trim, item_buf);
                   itemdb_size++;
@@ -367,11 +373,11 @@ int32_t * itemdb_wlv(void * field) { return &((item_t *)field)->wlv; return 0; }
 int32_t * itemdb_elv(void * field) { return &((item_t *)field)->elv; return 0; }
 int32_t * itemdb_refineable(void * field) { return &((item_t *)field)->refineable; return 0; }
 int32_t * itemdb_view(void * field) { return &((item_t *)field)->view; return 0; }
-char *itemdb_aegis(void * field) { return ((item_t *)field)->aegis;  return NULL; }
-char *itemdb_eathena(void * field) { return ((item_t *)field)->eathena;  return NULL; }
-char *itemdb_script(void * field) { return ((item_t *)field)->script;  return NULL; }
-char *itemdb_onequip(void * field) { return ((item_t *)field)->onequip;  return NULL; }
-char *itemdb_onunequip(void * field) { return ((item_t *)field)->onunequip; return NULL; }
+char * itemdb_aegis(void * field) { return ((item_t *)field)->aegis;  return NULL; }
+char * itemdb_eathena(void * field) { return ((item_t *)field)->eathena;  return NULL; }
+char * itemdb_script(void * field) { return ((item_t *)field)->script;  return NULL; }
+char * itemdb_onequip(void * field) { return ((item_t *)field)->onequip;  return NULL; }
+char * itemdb_onunequip(void * field) { return ((item_t *)field)->onunequip; return NULL; }
 int32_t itemdb_getsizeof(void) { return sizeof(item_t); }
 int32_t * itemdb_getint(void * db, int32_t index, DBFIELD field) { return field(&(((item_t *) db)[index])); }
 char * itemdb_getstr(void * db, int32_t index, DBFIELD_STR field) { return field(&(((item_t *) db)[index])); }

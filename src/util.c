@@ -151,6 +151,38 @@ int32_t ncs_strcmp(const char * str1, const char * str2) {
 	return 0;
 }
 
+int32_t ncs_nstrcmp(const char * str1, const char * str2, int length) {
+   int32_t offset1 = 0;
+   int32_t offset2 = 0;
+   // Check whether both strings exist
+   if(str1 == NULL || str2 == NULL) exit(EXIT_FAILURE);
+
+   // Attempt to find mismatch
+   for(int32_t i = 0; (str1[i+offset1] != '\0' || str2[i+offset2] != '\0') && i < length; i++) {
+      if(str1[i+offset1] == '_') offset1++;                  // Exclude comparing '_'
+      if(str2[i+offset2] == '_') offset2++;
+      if(toupper(str1[i+offset1]) != toupper(str2[i+offset2])) {
+         if(toupper(str1[i+offset1]) > toupper(str2[i+offset2]))
+            return 1;
+         else
+            return -1;
+      }
+   }
+   return 0;
+}
+
+// Retrieve a substring of the string and stop on delimiter.
+void substr_delimit(const char * src, char * dest, char delimit) {
+   int32_t i;
+   int32_t size = strlen(src);
+   for(i = 0; i < size; i++)
+      if(src[i] == delimit && i > 0) {
+         strncpy(dest, src, i);
+         dest[i] = '\0';
+         break;
+      }
+}
+
 // Generate a string using the ASCII character set.
 // int length - length of the string to generate.
 char * random_string(int32_t length) {

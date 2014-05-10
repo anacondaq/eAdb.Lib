@@ -9,19 +9,22 @@ CCompiler = gcc
 CFlags = -std=c99 -Wall
 
 # compile any changed source code file
-_OBJ = item.o util.o
+_OBJ = item.o item_bonus.o util.o
 OBJ = $(patsubst %,$(OBJDIR)%,$(_OBJ))
 
 _APP = test.c
 APP = $(patsubst %,$(APPDIR)%,$(_APP))
 
 # compile all applications or projects
-all: test test2
+all: test3
 
 test: $(APPDIR)test.c $(OBJ)
 	$(CCompiler) -o $@ $(CFlags) $^ $(HDRDIR)
 
-test2: $(APPDIR)test.c $(OBJ)
+test2: $(APPDIR)test2.c $(OBJ)
+	$(CCompiler) -o $@ $(CFlags) $^ $(HDRDIR)
+
+test3: $(APPDIR)test3.c $(OBJ)
 	$(CCompiler) -o $@ $(CFlags) $^ $(HDRDIR)
 
 $(OBJDIR)%.o: $(SRCDIR)%.c

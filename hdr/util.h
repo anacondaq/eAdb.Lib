@@ -29,37 +29,40 @@
    #define ASCII_SZE 36
 	
 	// type definition for function pointers
-	typedef void (*DBSWAP)(void *, int, int);						// Using a void * to a db, swap the element given the two index positions.
-	typedef int * (*DBFIELD)(void *);								// Using a void * to an entry in the db, return the field of type integer.
-	typedef int * (*DBTYPE)(void *, int, DBFIELD);				// Using a void * to a db, return the field at the index.
-	typedef char * (*DBFIELD_STR)(void *);							// Using a void * to an entry in the db, return the field of type string.
-	typedef char * (*DBTYPE_STR)(void *, int, DBFIELD_STR);	// Using a void * to a db, return the field at the string.
+	typedef void (*DBSWAP)(void *, int32_t, int32_t);						// using a void * to a db, swap the element given the two index positions.
+	typedef int32_t * (*DBFIELD)(void *);								// using a void * to an entry in the db, return the field of type integer.
+	typedef int32_t * (*DBTYPE)(void *, int, DBFIELD);				// using a void * to a db, return the field at the index.
+	typedef char * (*DBFIELD_STR)(void *);							// using a void * to an entry in the db, return the field of type string.
+	typedef char * (*DBTYPE_STR)(void *, int32_t, DBFIELD_STR);	// using a void * to a db, return the field at the string.
+	typedef int32_t (*CMP_SORT)(const void *, const void *q);		// c standard's quicksort comparsion function pointer
 	
 	// binary search for integers, case-sensitive strings, and non-case sensitive strings.
-	int bsearch_int(void * db, int db_size, int key, DBFIELD, DBTYPE);
-	int bsearch_str(void * db, int db_size, char * key, DBFIELD_STR, DBTYPE_STR);
-	int bsearch_ncs_str(void * db, int db_size, char * key, DBFIELD_STR field, DBTYPE_STR type);
+	int32_t bsearch_int(void * db, int32_t db_size, int32_t key, DBFIELD, DBTYPE);
+	int32_t bsearch_str(void * db, int32_t db_size, char * key, DBFIELD_STR, DBTYPE_STR);
+	int32_t bsearch_ncs_str(void * db, int32_t db_size, char * key, DBFIELD_STR field, DBTYPE_STR type);
 	
 	// heap sort for integers, case-sensitive strings, and non-case sensitive strings.
-	void hpsort_int(void * db, int db_size, DBFIELD, DBTYPE, DBSWAP);
-	void hpsort_str(void * db, int db_size, DBFIELD_STR, DBTYPE_STR, DBSWAP);
+	void hpsort_int(void * db, int32_t db_size, DBFIELD, DBTYPE, DBSWAP);
+	void hpsort_str(void * db, int32_t db_size, DBFIELD_STR, DBTYPE_STR, DBSWAP);
 
 	// comparsion functions
-	int greater_than(int a, int b);
-	int less_than(int a, int b);
-	int equal_to(int a, int b);
-	int notequal_to(int a, int b);
-	int bitmask(int a, int b);
-	int notbitmask(int a, int b);
-	int strcmp_greater(char * a, char * b);
-	int strcmp_less(char * a, char * b);
-	int strcmp_equal(char * a, char * b);
-	int strstr_equal(char * a, char * b);
-	int strstr_notequal(char * a, char * b);
-	int underscore_equal(char * a, char * b);
+	int32_t greater_than(int32_t a, int32_t b);
+	int32_t less_than(int32_t a, int32_t b);
+	int32_t equal_to(int32_t a, int32_t b);
+	int32_t notequal_to(int32_t a, int32_t b);
+	int32_t bitmask(int32_t a, int32_t b);
+	int32_t notbitmask(int32_t a, int32_t b);
+	int32_t strcmp_greater(char * a, char * b);
+	int32_t strcmp_less(char * a, char * b);
+	int32_t strcmp_equal(char * a, char * b);
+	int32_t strstr_equal(char * a, char * b);
+	int32_t strstr_notequal(char * a, char * b);
+	int32_t underscore_equal(char * a, char * b);
 
 	// string functions
-	int ncs_strcmp(const char *, const char *);
+	int32_t ncs_strcmp(const char *, const char *);
+	int32_t ncs_nstrcmp(const char *, const char *, int);
+	void substr_delimit(const char *, char *, char);
 	char * random_string(int32_t);
 	int32_t convert_integer(const char *, int32_t);
 	uint32_t convert_uinteger(const char *, uint32_t);

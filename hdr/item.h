@@ -7,10 +7,10 @@
    #include "util.h"
 
    // item database configuration
-   #define ITEM_COLUMNS        21
+   #define ITEM_COLUMNS        22
    #define ITEM_VERBOSE        0
 
-   // item Entry
+   // item entry
    typedef struct {
       int32_t id;
       char * aegis;
@@ -37,7 +37,7 @@
       char * onunequip;
    } item_t;
 
-   // item Database
+   // item database
    typedef struct {
       item_t * db;
       char * file;
@@ -71,11 +71,11 @@
    int32_t * itemdb_elv(void *);
    int32_t * itemdb_refineable(void *);
    int32_t * itemdb_view(void *);
-   char *itemdb_aegis(void *);
-   char *itemdb_eathena(void *);
-   char *itemdb_script(void *);
-   char *itemdb_onequip(void *);
-   char *itemdb_onunequip(void *);
+   char * itemdb_aegis(void *);
+   char * itemdb_eathena(void *);
+   char * itemdb_script(void *);
+   char * itemdb_onequip(void *);
+   char * itemdb_onunequip(void *);
    int32_t itemdb_getsizeof(void);
    int32_t * itemdb_getint(void *, int32_t, DBFIELD);
    char * itemdb_getstr(void *, int32_t, DBFIELD_STR);
