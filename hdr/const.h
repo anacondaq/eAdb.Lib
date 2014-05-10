@@ -7,10 +7,8 @@
    #include "util.h"
    #include "load.h"
 
-   // const database configuration
    #define CONST_COLUMNS_MIN        2
    #define CONST_COLUMNS_MAX        3
-   #define CONST_VERBOSE            0
    
    // const entry
    typedef struct {
@@ -25,17 +23,17 @@
       int32_t size;
    } const_w;
 
-   // constdb_loading and unloading interface
+   // database loading functions
+   int constdb_trim(FILE *, FILE *);
    int constdb_load(FILE *, void *, int32_t);
    void constdb_unload(const_w *);
-   int constdb_trim(FILE *, FILE *);
 
-   // constdb io
+   // database io functions
    void constdb_io(const_t, FILE *);
    void constdb_read(const_w *);
    void constdb_write(const_w *, const char *);
 
-   // constdb sorting and searching interface
+   // generic functions for getting and setting
    char * constdb_name(void *);
    int32_t * constdb_value(void *);
    int32_t * constdb_type (void *);

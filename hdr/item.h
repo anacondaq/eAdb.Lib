@@ -6,9 +6,7 @@
 #define ITEM_H
    #include "util.h"
 
-   // item database configuration
    #define ITEM_COLUMNS        22
-   #define ITEM_VERBOSE        0
 
    // item entry
    typedef struct {
@@ -40,19 +38,20 @@
    // item database
    typedef struct {
       item_t * db;
-      char * file;
       int32_t size;
    } item_w;
 
-   // itemdb primary functions
+   // database loading functions
    item_w * itemdb_load(const char *);
    item_w * itemdb_unload(item_w *);
+
+   // database io functions
    void itemdb_read(item_t);
    void itemdb_readall(item_w *);
    void itemdb_write(item_t, FILE *);
    void itemdb_writeall(item_w *, char *);
 
-   // itemdb generic functions for interface
+   // generic functions for getting and setting
    int32_t * itemdb_id(void *);
    int32_t * itemdb_type(void *);
    int32_t * itemdb_buy(void *);

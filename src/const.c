@@ -4,8 +4,9 @@
 // desc: const database management
 #include "const.h"
 
-int constdb_load(FILE * file_stm, void * const_db, int32_t const_size) {
-   const_t * db = (const_t *) const_db;
+// database loading functions
+int constdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
+   const_t * db = (const_t *) db_mem;
    int32_t cnt = DB_BEGIN;
    char buf[BUF_SIZE];
    char fld[BUF_SIZE];
@@ -61,7 +62,6 @@ int constdb_load(FILE * file_stm, void * const_db, int32_t const_size) {
       if(data_fld < CONST_COLUMNS_MIN || data_fld > CONST_COLUMNS_MAX) 
          fprintf(stdout,"warn: constdb_load; missing field expected %d < %d < %d %s", 
             CONST_COLUMNS_MIN, data_fld, CONST_COLUMNS_MAX, buf);
-
       cnt++;
    }
    return cnt;
@@ -95,6 +95,7 @@ int constdb_trim(FILE * file_stm, FILE * trim_stm) {
    return line_count;
 }
 
+// database io functions
 void constdb_io(const_t constant, FILE * file_stm) {
    fprintf(file_stm,"%s\t%d\t%d\n", constant.name, constant.value, constant.type);
 }
@@ -113,11 +114,12 @@ void constdb_write(const_w * const_db, const char * file_name) {
    fclose(file_stm);
 }
 
+// generic functions for getting and setting
 char * constdb_name(void * field) { return ((const_t *)field)->name; }
 int32_t * constdb_value(void * field) { return &((const_t *)field)->value; }
 int32_t * constdb_type (void * field) { return &((const_t *)field)->type; }
-int * constdb_indexint(void * db, int index, DBFIELD field) { return field(&(((const_t *) db)[index])); }
-char * constdb_indexstr(void * db, int index, DBFIELD_STR field) { return field(&(((const_t *) db)[index])); }
+int * constdb_getint(void * db, int index, DBFIELD field) { return field(&(((const_t *) db)[index])); }
+char * constdb_getstr(void * db, int index, DBFIELD_STR field) { return field(&(((const_t *) db)[index])); }
 void constdb_swap(void * db, int a, int b) {
    const_t * const_db = db;
    const_t temp = const_db[a];

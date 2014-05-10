@@ -6,14 +6,12 @@
 #define BONUS_H
    #include "util.h"
    
-   // item database configuration
    #define BONUS_FIELD_HEADER   5    // subtract from the below macro for number of arguments
    #define BONUS1_FIELD_COUNT   6
    #define BONUS2_FIELD_COUNT   7
    #define BONUS3_FIELD_COUNT   8
    #define BONUS4_FIELD_COUNT   9
    #define BONUS5_FIELD_COUNT   10
-   #define BONUS_VERBOSE        1
 
    // item bonus attributes
    #define STAT_ATTR 1 
@@ -29,7 +27,7 @@
    #define EQUP_ATTR 1024
    #define UNSE_ATTR 2048
 
-   // item bonus entry
+   // bonus entry
    typedef struct {
       char * pref;         // bonus prefix, i.e. bonus, bonus2, ..
       char * name;         // bonus identifier
@@ -40,22 +38,23 @@
       char * argv;         // argument specifiers
    } bonus_t;
    
-   // item bonus database
+   // bonus database
    typedef struct {
       bonus_t * db;
-      char * file;
       int32_t size;
    } bonus_w;
 
-   // bonusdb primary functions
+   // database loading functions
    bonus_w * bonusdb_load(const char *, const char *, int);
    bonus_w * bonusdb_unload(bonus_w *);
+
+   // database io functions
    void bonusdb_read(bonus_t item);
    void bonusdb_readall(bonus_w * db);
    void bonusdb_write(bonus_t, FILE *);
    void bonusdb_writeall(bonus_w *, char *);
 
-   // bonusdb generic functions for interface
+   // generic functions for getting and setting
    char * bonusdb_pref(void * field);
    char * bonusdb_name(void *);
    int * bonusdb_attr(void * field);

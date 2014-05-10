@@ -2,9 +2,10 @@
 // date: 5/9/2014
 // auth: trickyloki3
 // desc: item bonus database management
-#include "item_bonus.h"
+#include "bonus.h"
 static char * bonusdb_trim(const char *, const char *, int *, int);
 
+// database loading functions
 bonus_w * bonusdb_load(const char * filename, const char * prefix, int field_count) {
    // bonus wrapper data
    bonus_w * bonus_wrapper = NULL;
@@ -130,14 +131,14 @@ bonus_w * bonusdb_load(const char * filename, const char * prefix, int field_cou
    }
 
    // clean up loading resources
-   if(BONUS_VERBOSE) fprintf(stdout, "info: %s bonus database with prefix \"%s\" loaded successfully.\n", filename, prefix);
    fclose(bonus_file);
+   remove(bonus_filename);
+   free(bonus_filename);
 
    // return the item wrapper
    bonus_wrapper = malloc(sizeof(bonus_w));
    bonus_wrapper->db = bonus_database;
    bonus_wrapper->size = bonus_size + DB_BEGIN;
-   bonus_wrapper->file = bonus_filename;
    return bonus_wrapper;
 }
 
@@ -154,17 +155,14 @@ bonus_w * bonusdb_unload(bonus_w * bonus_db) {
             if(bonus.desc != NULL) free(bonus.desc);
             if(bonus.argv != NULL) free(bonus.argv);
          }
+         free(bonus_db->db);
       }
-
-      // Clean the database resources
-      remove(bonus_db->file);
-      if(bonus_db->file != NULL) free(bonus_db->file);
-      if(bonus_db->db != NULL) free(bonus_db->db);
       free(bonus_db);
    }
    return NULL;
 }
 
+// database io functions
 void bonusdb_read(bonus_t bonus) {
    int32_t i;
    printf("%7s%25s%5d%5d%128s%3d",bonus.pref, bonus.name, bonus.attr, bonus.spec, bonus.desc, bonus.argc);
@@ -274,6 +272,7 @@ static char * bonusdb_trim(const char * filename, const char * prefix, int * siz
    return trim_filename;
 }
 
+// generic functions for getting and setting
 char * bonusdb_pref(void * field) { return ((bonus_t *)field)->pref; }
 char * bonusdb_name(void * field) { return ((bonus_t *)field)->name; }
 int * bonusdb_attr(void * field) { return &((bonus_t *)field)->attr; }

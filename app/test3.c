@@ -1,6 +1,6 @@
 // Test item_bonus.c
 #include "item.h"
-#include "item_bonus.h"
+#include "bonus.h"
 
 int main(int argc, char * argv[]) {
    bonus_w * bonus_db = bonusdb_load("db/item_bonus.txt","bonus2",BONUS2_FIELD_COUNT);

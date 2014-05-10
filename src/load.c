@@ -88,6 +88,7 @@ void * load(const char * file_name, DB_TRIM file_trim, DB_LOAD file_load, size_t
    // return the wrapper
    fclose(trim_stm);
    remove(trim_name);
+   free(trim_name);
    wrapper = malloc(sizeof(generic_w));
    wrapper->db = db;
    wrapper->size = size + DB_BEGIN;

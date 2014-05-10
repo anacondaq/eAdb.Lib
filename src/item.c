@@ -154,14 +154,14 @@ item_w * itemdb_load(const char * filename) {
    }
    
    // clean up loading resources
-   if(ITEM_VERBOSE) fprintf(stdout, "info: %s item database loaded successfully.\n", filename);
    fclose(item_file);
+   remove(item_filename);
+   free(item_filename);
 
    // return the item wrapper
    item_wrapper = malloc(sizeof(item_w));
    item_wrapper->db = item_database;
    item_wrapper->size = item_size + DB_BEGIN;
-   item_wrapper->file = item_filename;
    return item_wrapper;
 }
 
@@ -182,97 +182,11 @@ item_w * itemdb_unload(item_w * wrapper) {
             if(item.onequip != NULL) free(item.onequip);
             if(item.onunequip != NULL) free(item.onunequip);
          }
+         free(wrapper->db);
       }
-
-      // Clean the database resources
-      remove(wrapper->file);
-      if(wrapper->file != NULL) free(wrapper->file);
-      if(wrapper->db != NULL) free(wrapper->db);
       free(wrapper);
    }
    return NULL;
-}
-
-// IO interface for item database
-// item_w * wrapper - any valid item database that was loaded successfully.
-void itemdb_read(item_t item) {
-   if(item.id >= 0) printf("%d,",item.id); else printf(",");   
-   printf("%s,",item.aegis);
-   printf("%s,",item.eathena);
-   if(item.type >= 0) printf("%d,",item.type); else printf(",");
-   if(item.buy >= 0) printf("%d,",item.buy); else printf(",");
-   if(item.sell >= 0) printf("%d,",item.sell); else printf(",");
-   if(item.weight >= 0) printf("%d,",item.weight); else printf(",");
-   if(item.matk > 0 && item.atk > 0)
-      printf("%d:%d,",item.atk,item.matk);
-   else if(item.matk > 0 && item.atk <= 0)
-      printf("%d:%d,",0,item.matk);
-   else if(item.matk < 0 && item.atk > 0)
-      printf("%d,",item.atk);
-   else
-      printf(",");
-   if(item.matk >= 0) printf("%d,",item.matk); else printf(",");
-   if(item.def >= 0) printf("%d,",item.def); else printf(",");   
-   if(item.range >= 0) printf("%d,",item.range); else printf(",");   
-   if(item.slots >= 0) printf("%d,",item.slots); else printf(",");
-   if(item.job >= 0) printf("0x%x,", item.job);
-   if(item.upper >= 0) printf("%d,",item.upper); else printf(",");
-   if(item.gender >= 0) printf("%d,",item.gender); else printf(",");
-   if(item.loc >= 0) printf("%d,",item.loc); else printf(",");   
-   if(item.wlv >= 0) printf("%d,",item.wlv); else printf(",");
-   if(item.elv >= 0) printf("%d,",item.elv); else printf(",");
-   if(item.refineable >= 0) printf("%d,",item.refineable); else printf(",");
-   if(item.view >= 0) printf("%d,",item.view); else printf(",");   
-   printf("%s,",item.script);
-   printf("%s,",item.onequip);
-   printf("%s\n",item.onunequip);
-}
-
-void itemdb_readall(item_w * item_db) {
-   int32_t i = DB_BEGIN;
-   for(; i < item_db->size; i++)
-      itemdb_read(item_db->db[i]);
-}
-
-void itemdb_write(item_t item, FILE * item_db_new) {
-   if(item.id >= 0) fprintf(item_db_new,"%d,",item.id); else fprintf(item_db_new,",");
-   fprintf(item_db_new,"%s,",item.aegis);
-   fprintf(item_db_new,"%s,",item.eathena);
-   if(item.type >= 0) fprintf(item_db_new,"%d,",item.type); else fprintf(item_db_new,",");
-   if(item.buy >= 0) fprintf(item_db_new,"%d,",item.buy); else fprintf(item_db_new,",");
-   if(item.sell >= 0) fprintf(item_db_new,"%d,",item.sell); else fprintf(item_db_new,",");
-   if(item.weight >= 0) fprintf(item_db_new,"%d,",item.weight); else fprintf(item_db_new,",");   
-   if(item.matk > 0 && item.atk > 0)
-      fprintf(item_db_new,"%d:%d,",item.atk,item.matk);
-   else if(item.matk > 0 && item.atk <= 0)
-      fprintf(item_db_new,"%d:%d,",0,item.matk);
-   else if(item.matk <= 0 && item.atk > 0)
-      fprintf(item_db_new,"%d,",item.atk);
-   else
-      fprintf(item_db_new,",");
-   if(item.def >= 0) fprintf(item_db_new,"%d,",item.def); else fprintf(item_db_new,",");
-   if(item.range >= 0) fprintf(item_db_new,"%d,",item.range); else fprintf(item_db_new,",");
-   if(item.slots >= 0) fprintf(item_db_new,"%d,",item.slots); else fprintf(item_db_new,",");
-   if(item.job >= 0) fprintf(item_db_new,"0x%x,",item.job);
-   if(item.upper >= 0) fprintf(item_db_new,"%d,",item.upper); else fprintf(item_db_new,",");
-   if(item.gender >= 0) fprintf(item_db_new,"%d,",item.gender); else fprintf(item_db_new,",");
-   if(item.loc >= 0) fprintf(item_db_new,"%d,",item.loc); else fprintf(item_db_new,",");
-   if(item.wlv >= 0) fprintf(item_db_new,"%d,",item.wlv); else fprintf(item_db_new,",");
-   if(item.elv >= 0) fprintf(item_db_new,"%d,",item.elv); else fprintf(item_db_new,",");
-   if(item.refineable >= 0) fprintf(item_db_new,"%d,",item.refineable); else fprintf(item_db_new,",");
-   if(item.view >= 0) fprintf(item_db_new,"%d,",item.view); else fprintf(item_db_new,",");   
-   fprintf(item_db_new,"%s,",item.script);
-   fprintf(item_db_new,"%s,",item.onequip);
-   fprintf(item_db_new,"%s\n",item.onunequip);
-}
-
-void itemdb_writeall(item_w * item_db, char * file) {
-   int32_t i = DB_BEGIN;
-   FILE * file_stm = fopen(file,"w");
-   if(file_stm == NULL) return;
-   for(; i < item_db->size; i++)
-      itemdb_write(item_db->db[i], file_stm);
-   fclose(file_stm);
 }
 
 // Filter the item database for valid item entries only;
@@ -353,8 +267,88 @@ static char * itemdb_trim(const char * filename, int32_t * size) {
    return trim_filename;
 }
 
-// Generic function pointers for searching, sorting, etc interfaces
-// void * field - Retrieve from the item entry (item_t) field
+// database io functions
+void itemdb_read(item_t item) {
+   if(item.id >= 0) printf("%d,",item.id); else printf(",");   
+   printf("%s,",item.aegis);
+   printf("%s,",item.eathena);
+   if(item.type >= 0) printf("%d,",item.type); else printf(",");
+   if(item.buy >= 0) printf("%d,",item.buy); else printf(",");
+   if(item.sell >= 0) printf("%d,",item.sell); else printf(",");
+   if(item.weight >= 0) printf("%d,",item.weight); else printf(",");
+   if(item.matk > 0 && item.atk > 0)
+      printf("%d:%d,",item.atk,item.matk);
+   else if(item.matk > 0 && item.atk <= 0)
+      printf("%d:%d,",0,item.matk);
+   else if(item.matk < 0 && item.atk > 0)
+      printf("%d,",item.atk);
+   else
+      printf(",");
+   if(item.matk >= 0) printf("%d,",item.matk); else printf(",");
+   if(item.def >= 0) printf("%d,",item.def); else printf(",");   
+   if(item.range >= 0) printf("%d,",item.range); else printf(",");   
+   if(item.slots >= 0) printf("%d,",item.slots); else printf(",");
+   if(item.job >= 0) printf("0x%x,", item.job);
+   if(item.upper >= 0) printf("%d,",item.upper); else printf(",");
+   if(item.gender >= 0) printf("%d,",item.gender); else printf(",");
+   if(item.loc >= 0) printf("%d,",item.loc); else printf(",");   
+   if(item.wlv >= 0) printf("%d,",item.wlv); else printf(",");
+   if(item.elv >= 0) printf("%d,",item.elv); else printf(",");
+   if(item.refineable >= 0) printf("%d,",item.refineable); else printf(",");
+   if(item.view >= 0) printf("%d,",item.view); else printf(",");   
+   printf("%s,",item.script);
+   printf("%s,",item.onequip);
+   printf("%s\n",item.onunequip);
+}
+
+void itemdb_readall(item_w * item_db) {
+   int32_t i = DB_BEGIN;
+   for(; i < item_db->size; i++)
+      itemdb_read(item_db->db[i]);
+}
+
+void itemdb_write(item_t item, FILE * item_db_new) {
+   if(item.id >= 0) fprintf(item_db_new,"%d,",item.id); else fprintf(item_db_new,",");
+   fprintf(item_db_new,"%s,",item.aegis);
+   fprintf(item_db_new,"%s,",item.eathena);
+   if(item.type >= 0) fprintf(item_db_new,"%d,",item.type); else fprintf(item_db_new,",");
+   if(item.buy >= 0) fprintf(item_db_new,"%d,",item.buy); else fprintf(item_db_new,",");
+   if(item.sell >= 0) fprintf(item_db_new,"%d,",item.sell); else fprintf(item_db_new,",");
+   if(item.weight >= 0) fprintf(item_db_new,"%d,",item.weight); else fprintf(item_db_new,",");   
+   if(item.matk > 0 && item.atk > 0)
+      fprintf(item_db_new,"%d:%d,",item.atk,item.matk);
+   else if(item.matk > 0 && item.atk <= 0)
+      fprintf(item_db_new,"%d:%d,",0,item.matk);
+   else if(item.matk <= 0 && item.atk > 0)
+      fprintf(item_db_new,"%d,",item.atk);
+   else
+      fprintf(item_db_new,",");
+   if(item.def >= 0) fprintf(item_db_new,"%d,",item.def); else fprintf(item_db_new,",");
+   if(item.range >= 0) fprintf(item_db_new,"%d,",item.range); else fprintf(item_db_new,",");
+   if(item.slots >= 0) fprintf(item_db_new,"%d,",item.slots); else fprintf(item_db_new,",");
+   if(item.job >= 0) fprintf(item_db_new,"0x%x,",item.job);
+   if(item.upper >= 0) fprintf(item_db_new,"%d,",item.upper); else fprintf(item_db_new,",");
+   if(item.gender >= 0) fprintf(item_db_new,"%d,",item.gender); else fprintf(item_db_new,",");
+   if(item.loc >= 0) fprintf(item_db_new,"%d,",item.loc); else fprintf(item_db_new,",");
+   if(item.wlv >= 0) fprintf(item_db_new,"%d,",item.wlv); else fprintf(item_db_new,",");
+   if(item.elv >= 0) fprintf(item_db_new,"%d,",item.elv); else fprintf(item_db_new,",");
+   if(item.refineable >= 0) fprintf(item_db_new,"%d,",item.refineable); else fprintf(item_db_new,",");
+   if(item.view >= 0) fprintf(item_db_new,"%d,",item.view); else fprintf(item_db_new,",");   
+   fprintf(item_db_new,"%s,",item.script);
+   fprintf(item_db_new,"%s,",item.onequip);
+   fprintf(item_db_new,"%s\n",item.onunequip);
+}
+
+void itemdb_writeall(item_w * item_db, char * file) {
+   int32_t i = DB_BEGIN;
+   FILE * file_stm = fopen(file,"w");
+   if(file_stm == NULL) return;
+   for(; i < item_db->size; i++)
+      itemdb_write(item_db->db[i], file_stm);
+   fclose(file_stm);
+}
+
+// generic functions for getting and setting
 int32_t * itemdb_id(void * field) { return &((item_t *)field)->id; return 0; }
 int32_t * itemdb_type(void * field) { return &((item_t *)field)->type; return 0; }
 int32_t * itemdb_buy(void * field) { return &((item_t *)field)->buy; return 0; }
