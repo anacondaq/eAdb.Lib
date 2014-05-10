@@ -1,4 +1,4 @@
-// file: item_bonus.h
+// file: bonus.h
 // date: 5/9/2014
 // auth: trickyloki3
 // desc: item bonus database management

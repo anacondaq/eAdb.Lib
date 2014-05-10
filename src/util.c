@@ -212,7 +212,7 @@ int32_t convert_integer(const char * str, int32_t base) {
       fprintf(stdout,"warn: convert_integer detected out-of-range string conversion to (int32_t) %s.\n", str);
 
    if(*endptr != '\0')               // check if string consume
-      fprintf(stdout,"warn: convert_integer failed to consume entire string for conversion %s.\n", str);
+      fprintf(stdout,"warn: convert_integer failed to consume entire string for conversion %s; unconsumed %s; base %d.\n", str, endptr, base);
 
    if(value > INT32_MAX)            // check if out of range (although this might not work)
       fprintf(stdout,"warn: convert_integer possible out-of-range string conversion to (int32_t) %s.\n", str);
@@ -233,7 +233,7 @@ uint32_t convert_uinteger(const char * str, uint32_t base) {
       fprintf(stdout,"warn: convert_integer detected out-of-range string for conversion to long %s.\n", str);
 
    if(*endptr != '\0')               // check if string consume
-      fprintf(stdout,"warn: convert_integer failed to consume entire string for conversion %s.\n", str);
+      fprintf(stdout,"warn: convert_integer failed to consume entire string for conversion %s; unconsumed %s; base %d.\n", str, endptr, base);
 
    if(value > UINT32_MAX)            // check if out of range (although this might not work)
       fprintf(stdout,"warn: convert_integer possible out-of-range string conversion to (uint32_t) %s.\n", str);

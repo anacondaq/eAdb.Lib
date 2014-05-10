@@ -1,4 +1,4 @@
-// file: item_bonus.c
+// file: bonus.c
 // date: 5/9/2014
 // auth: trickyloki3
 // desc: item bonus database management
@@ -251,7 +251,7 @@ static char * bonusdb_trim(const char * filename, const char * prefix, int * siz
                   else if((bonus_buf[i] == ',' || isspace(bonus_buf[i])) && !quote_level) {
                      field_level++;
                      // skip all other whitespace
-                     while(isspace(bonus_buf[i]) && bonus_buf[i] != '\0') i++;
+                     while(isspace(bonus_buf[i+1]) && bonus_buf[i+1] != '\0') i++;
                   } else if(bonus_buf[i] == ';' && !quote_level) {
                      field_level++;
                      break;
