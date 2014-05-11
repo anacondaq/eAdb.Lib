@@ -48,7 +48,7 @@ int32_t mercdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
             	case 23: db[cnt].adelay = convert_integer(fld, 10); break;
             	case 24: db[cnt].amotion = convert_integer(fld, 10); break;
             	case 25: db[cnt].dmotion = convert_integer(fld, 10); break;
-               default: fprintf(stdout,"warn: skilldb_load; invalid field column %s in %s", fld, buf); break;
+               default: fprintf(stdout,"warn: mercdb_load; invalid field column %s in %s", fld, buf); break;
             }
             read_fld = 0;
             data_fld++;
@@ -68,7 +68,7 @@ int32_t mercdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
 
       // check for missing fields
       if(data_fld != MERCENARY_COLUMN) 
-         fprintf(stdout,"warn: skilldb_load; missing field expected %d got %d; %s", MERCENARY_COLUMN, data_fld, buf);
+         fprintf(stdout,"warn: mercdb_load; missing field expected %d got %d; %s", MERCENARY_COLUMN, data_fld, buf);
       cnt++;
    }
    return cnt;
