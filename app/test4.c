@@ -1,7 +1,8 @@
-// Test item_bonus.c / mob.c
+// Test item_bonus.c / mob.c / skill.c / merc.c
 #include "const.h"
 #include "mob.h"
 #include "skill.h"
+#include "merc.h"
 
 int main(int argc, char * argv[]) {
    //const_w * const_db = (const_w *) load("db/const.txt", constdb_trim, constdb_load, sizeof(const_t));
@@ -14,10 +15,15 @@ int main(int argc, char * argv[]) {
    //mobdb_write(mob_db, "new_mob_db.txt");
    //mobdb_unload(mob_db);
 
-   skill_w * skill_db = (skill_w *) load("db/skill_db.txt", general_trim, skilldb_load, sizeof(skill_t));
+   //skill_w * skill_db = (skill_w *) load("db/skill_db.txt", general_trim, skilldb_load, sizeof(skill_t));
    //skilldb_read(skill_db);
-   hpsort_str(skill_db->db, skill_db->size, skilldb_name, skilldb_getstr, skilldb_swap);
-   skilldb_write(skill_db,"new_skill_db.txt");
-   skilldb_unload(skill_db);
+   //hpsort_str(skill_db->db, skill_db->size, skilldb_name, skilldb_getstr, skilldb_swap);
+   //skilldb_write(skill_db,"new_skill_db.txt");
+   //skilldb_unload(skill_db);
+   
+   //merc_w * merc_db = (merc_w *) load("db/mercenary_db.txt", general_trim, mercdb_load, sizeof(merc_t));
+   //hpsort_str(merc_db->db, merc_db->size, mercdb_name, mercdb_getstr, mercdb_swap);
+   //mercdb_write(merc_db,"new_merc_db.txt");
+   //mercdb_unload(merc_db);
    exit(EXIT_SUCCESS);
 }

@@ -5,7 +5,7 @@
 #include "skill.h"
 
 // database loading functions
-int skilldb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
+int32_t skilldb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
 	skill_t * db = (skill_t *) db_mem;
    int32_t cnt = DB_BEGIN;
    char buf[BUF_SIZE];

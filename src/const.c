@@ -5,7 +5,7 @@
 #include "const.h"
 
 // database loading functions
-int constdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
+int32_t constdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
    const_t * db = (const_t *) db_mem;
    int32_t cnt = DB_BEGIN;
    char buf[BUF_SIZE];
