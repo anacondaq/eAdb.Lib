@@ -118,20 +118,6 @@ void mobdb_unload(mob_w * mob_db) {
    }
 }
 
-int mobdb_trim(FILE * file_stm, FILE * trim_stm) {
-   int line_count = 0;
-   char buf[BUF_SIZE];
-   while(fgets(buf, sizeof(buf), file_stm) != NULL)
-      if(strlen(buf) > 0)            // check if empty
-         if(!isspace(buf[0]))        // check if whitespace
-            if(buf[0] != '/')        // check if comment
-            	if(isdigit(buf[0])) { // check if digit
-               	fprintf(trim_stm, "%s", buf);
-               	line_count++;
-            	}
-   return line_count;
-}
-
 // database io functions
 void mobdb_io(mob_t mob, FILE *mob_stm) {
 	if(mob_stm == NULL) return;

@@ -105,6 +105,7 @@ void constdb_read(const_w * const_db) {
    for(i = DB_BEGIN; i < const_db->size; i++)
       constdb_io(const_db->db[i], stdout);
 }
+
 void constdb_write(const_w * const_db, const char * file_name) {
    int32_t i;
    FILE * file_stm = fopen(file_name,"w");

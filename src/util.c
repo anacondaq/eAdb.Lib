@@ -6,6 +6,19 @@
 static void sift_down_int(void * db, int root, int size, DBFIELD, DBTYPE, DBSWAP);
 static void sift_down_str(void * db, int root, int size, DBFIELD_STR, DBTYPE_STR, DBSWAP);
 
+void array_io(array_w array, FILE * file_stm) {
+   int32_t i = 0;
+   int32_t * list = array.array;
+   int32_t size = array.size;
+   for(i = 0; i < size - 1; i++)
+      fprintf(file_stm,"%d%c", list[i], array.delimit);
+   fprintf(file_stm,"%d,", list[i]);
+}
+
+void array_unload(array_w array) {
+   if(array.array != NULL) free(array.array);
+}
+
 // binary search functions
 int32_t bsearch_int(void * db, int32_t db_size, int32_t key, DBFIELD field, DBTYPE type) {
 	int32_t top = db_size - 1;				
@@ -172,15 +185,39 @@ int32_t ncs_nstrcmp(const char * str1, const char * str2, int length) {
 }
 
 // Retrieve a substring of the string and stop on delimiter.
-void substr_delimit(const char * src, char * dest, char delimit) {
+char * substr_delimit(char * src, char * dest, char delimit) {
    int32_t i;
-   int32_t size = strlen(src);
-   for(i = 0; i < size; i++)
-      if(src[i] == delimit && i > 0) {
+   int32_t src_cnt = strlen(src);
+   for(i = 0; i < src_cnt; i++)
+      if((src[i] == delimit || src[i] == '\0') && i > 0) {
          strncpy(dest, src, i);
          dest[i] = '\0';
-         break;
+         return &src[i];
       }
+   // retrieve the whole string if unmatch delimit
+   strncpy(dest, src, src_cnt);
+   dest[src_cnt] = '\0';
+   return &src[src_cnt];
+}
+
+char * substr_delimit_list(char * src, char * dest, char * delimit) {
+   int32_t i, j;
+   int32_t src_cnt = strlen(src);
+   int32_t del_cnt = strlen(delimit);
+
+   for(i = 0; i < src_cnt; i++) {
+      for(j = 0; j < del_cnt; j++)
+         if(src[i] == delimit[j] && i > 0) {
+            strncpy(dest, src, i);
+            dest[i] = '\0';
+            return &src[i];
+         }
+   }
+
+   // retrieve the whole string if unmatch delimit
+   strncpy(dest, src, src_cnt);
+   dest[src_cnt] = '\0';
+   return &src[src_cnt];
 }
 
 // Generate a string using the ASCII character set.
@@ -205,6 +242,10 @@ int32_t convert_integer(const char * str, int32_t base) {
 
    if(str == NULL || *str == '\0')    // check the paramater string
       return FIELD_INT_EMPTY;
+
+   // override the base for hexadecimal numbers
+   if(strlen(str) > 2 && str[0] == '0' && str[1] == 'x')
+      base = 16;
 
    value = strtol(str, &endptr, base);
 
@@ -289,4 +330,44 @@ void convert_delimit_integer(char * str, char delimit, int32_t argc, ...) {
       *temp = FIELD_INT_EMPTY;
    }
    va_end(argv);
+}
+
+void convert_integer_list(char * str, char * delimit, array_w * list) {
+   int32_t i, j;
+   int32_t * int_list = NULL;
+   int32_t str_cnt = strlen(str);
+   int32_t del_cnt = strlen(delimit);
+   int32_t fld_cnt = 1;
+   char * end_ptr = NULL;
+   char fld[BUF_SIZE];
+
+   // check the paramater
+   if(str == NULL || delimit == NULL || list == NULL) {
+      fprintf(stdout,"warn: convert_integer_list detected NULL paramaters.\n");
+      return;
+   }
+
+   // find the total number of fields
+   for(i = 0; i < str_cnt; i++)
+      for(j = 0; j < del_cnt; j++)
+         if(str[i] == delimit[j]) {
+            fld_cnt++;
+            break;
+         }
+
+   // allocate memory for the list
+   int_list = malloc(sizeof(int32_t) * fld_cnt);
+
+   // extract the fields
+   end_ptr = substr_delimit_list(str, fld, delimit);
+   int_list[0] = convert_integer(fld, 10);
+   for(i = 1; end_ptr != NULL && i < fld_cnt; i++) {
+      end_ptr = substr_delimit_list(end_ptr + 1, fld, delimit);
+      int_list[i] = convert_integer(fld, 10);
+   }
+
+   // set the new array
+   list->array = (void *) int_list;
+   list->size = fld_cnt;
+   list->delimit = delimit[0];
 }

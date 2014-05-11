@@ -16,6 +16,10 @@
       int32_t size;
    } generic_w;
 
+   // generic functions
    char * trim(const char *, int32_t *, DB_TRIM);
    void * load(const char *, DB_TRIM, DB_LOAD, size_t);
+
+   // specific functions
+   int general_trim(FILE *, FILE *);
 #endif

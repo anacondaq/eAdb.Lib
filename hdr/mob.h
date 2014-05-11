@@ -78,7 +78,6 @@
 	} mob_w;
 	
 	// database loading functions
-	int32_t mobdb_trim(FILE *, FILE *);
 	int32_t mobdb_load(FILE *, void *, int32_t);
 	void mobdb_unload(mob_w *);
 	

@@ -12,6 +12,16 @@
    #include <ctype.h>
    #include <stdint.h>
 	
+	// array wrapper
+	typedef struct {
+      void * array;
+      int32_t size;
+      char delimit;
+   } array_w;
+
+   void array_io(array_w, FILE *);
+   void array_unload(array_w);
+
 	// BUF_SIZE is the standard static buffer size
 	#define BUF_SIZE 4096
 
@@ -29,12 +39,12 @@
    #define ASCII_SZE 36
 	
 	// type definition for function pointers
-	typedef void (*DBSWAP)(void *, int32_t, int32_t);						// using a void * to a db, swap the element given the two index positions.
+	typedef void (*DBSWAP)(void *, int32_t, int32_t);				// using a void * to a db, swap the element given the two index positions.
 	typedef int32_t * (*DBFIELD)(void *);								// using a void * to an entry in the db, return the field of type integer.
 	typedef int32_t * (*DBTYPE)(void *, int, DBFIELD);				// using a void * to a db, return the field at the index.
-	typedef char * (*DBFIELD_STR)(void *);							// using a void * to an entry in the db, return the field of type string.
+	typedef char * (*DBFIELD_STR)(void *);								// using a void * to an entry in the db, return the field of type string.
 	typedef char * (*DBTYPE_STR)(void *, int32_t, DBFIELD_STR);	// using a void * to a db, return the field at the string.
-	typedef int32_t (*CMP_SORT)(const void *, const void *q);		// c standard's quicksort comparsion function pointer
+	typedef int32_t (*CMP_SORT)(const void *, const void *q);	// c standard's quicksort comparsion function pointer
 	
 	// binary search for integers, case-sensitive strings, and non-case sensitive strings.
 	int32_t bsearch_int(void * db, int32_t db_size, int32_t key, DBFIELD, DBTYPE);
@@ -62,10 +72,12 @@
 	// string functions
 	int32_t ncs_strcmp(const char *, const char *);
 	int32_t ncs_nstrcmp(const char *, const char *, int);
-	void substr_delimit(const char *, char *, char);
+	char * substr_delimit(char *, char *, char);
+	char * substr_delimit_list(char *, char *, char *);
 	char * random_string(int32_t);
 	int32_t convert_integer(const char *, int32_t);
 	uint32_t convert_uinteger(const char *, uint32_t);
 	char * convert_string(const char *);
 	void convert_delimit_integer(char *, char, int32_t, ...);
+	void convert_integer_list(char *, char *, array_w *);
 #endif
