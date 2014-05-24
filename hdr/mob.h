@@ -1,15 +1,19 @@
-// file: mob.h
-// date: 5/10/2014
-// auth: trickyloki3
-// desc: mob database management
+/*=============================================================================
+   file: mob.h
+   date: 5/10/2014
+ update: 5/23/2014
+   auth: trickyloki3
+   desc: mob database management
+   note: very simple code
+=============================================================================*/
 #ifndef MOB_H
 #define MOB_H
 	#include "util.h"
 	#include "load.h"
+	
+	#define MOB_COLUMNS 58
 
-	#define MOB_COLUMNS        57
-
-	// mob entry
+	/* mob entry */
 	typedef struct {
 		int32_t id;
 		char * sprite;
@@ -42,7 +46,7 @@
 		int32_t amotion;
 		int32_t dmotion;
 		int32_t mexp;
-		//int32_t expper;
+		/*int32_t expper;*/
 		int32_t mvp1id;
 		int32_t mvp1per;
 		int32_t mvp2id;
@@ -71,22 +75,22 @@
 		int32_t dropcardper;
 	} mob_t;
 	
-	// mob database
+	/* mob database */
 	typedef struct {
 		mob_t * db;
 		int32_t size;
 	} mob_w;
 	
-	// database loading functions
-	int32_t mobdb_load(FILE *, void *, int32_t);
-	void mobdb_unload(mob_w *);
+	/* initialize and deinitialize the database */
+	mob_w * mobdb_init(const char *);
+	void mobdb_deinit(mob_w *);
 	
-	// database io functions
+	/* reading and writing the database */
 	void mobdb_io(mob_t, FILE *);
 	void mobdb_read(mob_w *);
 	void mobdb_write(mob_w *, const char *);
 
-	// generic functions for getting and setting
+	/* generic functions for getting and setting */
 	int32_t * mobdb_id(void *);
 	int32_t * mobdb_lv(void *);
 	int32_t * mobdb_hp(void *);

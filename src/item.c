@@ -1,47 +1,51 @@
-// file: item.c
-// date: 5/7/2014
-// auth: trickyloki3
-// desc: item database management
+/*=============================================================================
+   file: item.c
+   date: 5/7/2014
+ update: 5/23/2014
+   auth: trickyloki3
+   desc: item database management
+   note: very simple code
+=============================================================================*/
 #include "item.h"
 static char * itemdb_trim(const char *, int32_t *);
 
-// Load a eAthena / rAthena item database file
+/* Load a eAthena / rAthena item database file
 // into main memory for processing.
 // char * filename - Path directory to the item database 
 // file, i.e. item_db.txt; both relative and absolute
-// directory paths.
-item_w * itemdb_load(const char * filename) {
-   // item wrapper data
+// directory paths. */
+item_w * itemdb_init(const char * filename) {
+   /* item wrapper data */
    item_w * item_wrapper = NULL;
    item_t * item_database = NULL;
    char * item_filename = NULL;
    int32_t item_size = 0;
    int32_t item_count = DB_BEGIN;
 
-   // item load data
+   /* item load data */
    FILE * item_file = NULL;
-   char item_buf[BUF_SIZE];                  // item buffer
-   char item_fld[BUF_SIZE];                  // field buffer
-   int32_t read_buf = 0;                     // current item buffer index
-   int32_t read_fld = 0;                     // current item field index
-   int32_t script_level = 0;                 // script nesting using brackets
-   int32_t field_level = 0;                  // current item field, i.e. id, aegis, eathena, ..
+   char item_buf[BUF_SIZE];                  /* item buffer */
+   char item_fld[BUF_SIZE];                  /* field buffer */
+   int32_t read_buf = 0;                     /* current item buffer index */
+   int32_t read_fld = 0;                     /* current item field index */
+   int32_t script_level = 0;                 /* script nesting using brackets */
+   int32_t field_level = 0;                  /* current item field, i.e. id, aegis, eathena, .. */
 
-   // filter the database for valid entries per line
+   /* filter the database for valid entries per line */
    item_filename = itemdb_trim(filename, &item_size);
    if(item_filename == NULL) {
       fprintf(stdout,"warn: itemdb_load failed to filter original database file %s.\n", filename);
       return NULL;
    }
 
-   // check if the file have at least one valid entry
+   /* check if the file have at least one valid entry */
    if(item_size <= 0) {
       fprintf(stdout,"warn: itemdb_load failed to detect valid entries in the original database file %s\n", filename);
       if(item_filename != NULL) free(item_filename);
       return NULL;
    }
 
-   // allocate memory for the database
+   /* allocate memory for the database */
    item_database = malloc(sizeof(item_t) * (item_size + DB_BEGIN));
    if(item_database == NULL) {
       fprintf(stdout,"warn: itemdb_load failed to allocate memory for database.\n");
@@ -49,7 +53,7 @@ item_w * itemdb_load(const char * filename) {
       return NULL;
    }
 
-   // open filtered database for reading
+   /* open filtered database for reading */
    item_file = fopen(item_filename, "r");
    if(item_file == NULL) {
       fprintf(stdout,"warn: itemdb_load failed to open filtered database file %s.\n", item_filename);
@@ -58,15 +62,14 @@ item_w * itemdb_load(const char * filename) {
       return NULL;
    }
 
-   // load the database into memory
+   /* load the database into memory */
    while(fgets(item_buf, BUF_SIZE, item_file) != NULL) {
-      // reset reading paramaters
       read_buf = 0;
       read_fld = 0;
       script_level = 0;
       field_level = 0;
 
-      // initialize item entry
+      /* initialize item entry */
       item_database[item_count].id = FIELD_INT_EMPTY;
       item_database[item_count].aegis = NULL;
       item_database[item_count].eathena = NULL;
@@ -91,16 +94,16 @@ item_w * itemdb_load(const char * filename) {
       item_database[item_count].onequip = NULL;
       item_database[item_count].onunequip = NULL;
 
-      // read the item entry
+      /* read the item entry */
       while(1) {
-         // check if entering script
+         /* check if entering script */
          if(item_buf[read_buf] == '{')
             script_level++;
-         // check if leaving script
+         /* check if leaving script */
          else if(item_buf[read_buf] == '}')
             script_level--;
 
-         // check if delimiter for field
+         /* check if delimiter for field */
          if(!script_level && (item_buf[read_buf] == ',' || item_buf[read_buf] == '\n' || item_buf[read_buf] == '\0')) {
             item_fld[read_fld] = '\0';
             switch(field_level) {
@@ -131,49 +134,48 @@ item_w * itemdb_load(const char * filename) {
             }
             read_fld = 0;
             field_level++;
-         // copy from item buffer to field buffer
+         /* copy from item buffer to field buffer */
          } else {
             item_fld[read_fld] = item_buf[read_buf];
             read_fld++;
          }
 
-         // finish reading the item
+         /* finish reading the item */
          if(item_buf[read_buf] == '\0' || item_buf[read_buf] == '\n') break;
          read_buf++;
       }
 
-      // check for missing fields
+      /* check for missing fields */
       if(field_level != ITEM_COLUMNS) 
          fprintf(stdout,"warn: itemdb_load missing field expected %d got %d from %s: %s", ITEM_COLUMNS, field_level, filename, item_buf);
 
-      // check for missing brackets
+      /* check for missing brackets */
       if(script_level)
          fprintf(stdout,"warn: itemdb_load missing bracket %s: %s", filename, item_buf);
 
       item_count++;
    }
    
-   // clean up loading resources
+   /* clean up loading resources */
    fclose(item_file);
    remove(item_filename);
    free(item_filename);
 
-   // return the item wrapper
+   /* return the item wrapper */
    item_wrapper = malloc(sizeof(item_w));
    item_wrapper->db = item_database;
    item_wrapper->size = item_size + DB_BEGIN;
    return item_wrapper;
 }
 
-// Return the item database resources.
+/* Return the item database resources.
 // item_w * wrapper - any valid item database that
-// was loaded successfully.
-item_w * itemdb_unload(item_w * wrapper) {
+// was loaded successfully. */
+item_w * itemdb_deinit(item_w * wrapper) {
    int32_t i = 0;
    item_t item;
    if(wrapper != NULL) {
       if(wrapper->db != NULL) {
-         // free all the strings for each item
          for(i = DB_BEGIN; i < wrapper->size; i++) {
             item = wrapper->db[i];
             if(item.aegis != NULL) free(item.aegis);
@@ -189,7 +191,7 @@ item_w * itemdb_unload(item_w * wrapper) {
    return NULL;
 }
 
-// Filter the item database for valid item entries only;
+/* Filter the item database for valid item entries only;
 // the item entries are written to another file in the
 // same directory as the program and will have the name
 // (trim_filename) with the (size) pointer set to the 
@@ -199,7 +201,7 @@ item_w * itemdb_unload(item_w * wrapper) {
 // directory paths.
 // int * size - The total number of valid item entries
 // detected, which is used to allocate exact memory 
-// storage.
+// storage. */
 static char * itemdb_trim(const char * filename, int32_t * size) {
    char * trim_filename = NULL;
    FILE * itemdb_file = NULL;
@@ -211,20 +213,20 @@ static char * itemdb_trim(const char * filename, int32_t * size) {
    int32_t field_level = 0;
    int32_t i = 0;
 
-   // check if paramaters are valid
+   /* check if paramaters are valid */
    if(filename == NULL || size == NULL) {
       fprintf(stdout,"warn: itemdb_trim detected NULL paramaters.\n");
       return NULL;
    }
 
-   // failed to allocate temporary filename
+   /* failed to allocate temporary filename */
    trim_filename = random_string(16);
    if(trim_filename == NULL) {
       fprintf(stdout,"warn: itemdb_trim temporary filename failed to allocate memory.\n");
       return NULL;
    }
 
-   // failed to open original or temporary files
+   /* failed to open original or temporary files */
    itemdb_file = fopen(filename,"r");
    itemdb_trim = fopen(trim_filename,"w");
    if(itemdb_file == NULL || itemdb_trim == NULL) {
@@ -234,12 +236,12 @@ static char * itemdb_trim(const char * filename, int32_t * size) {
       return NULL;
    }
 
-   // filter item database for valid entries only
+   /* filter item database for valid entries only */
    while(fgets(item_buf, sizeof(item_buf), itemdb_file) != NULL)
-      if(!isspace(item_buf[0]))         // check whitespace
-         if(item_buf[0] != '/')         // check comment
-            if(isdigit(item_buf[0])) {  // check item id
-               // check missing fields and unmatch brackets
+      if(!isspace(item_buf[0]))         /* check whitespace */
+         if(item_buf[0] != '/')         /* check comment */
+            if(isdigit(item_buf[0])) {  /* check item id */
+               /* check missing fields and unmatch brackets */
                script_level = 0;
                field_level = 0;
 
@@ -267,7 +269,6 @@ static char * itemdb_trim(const char * filename, int32_t * size) {
    return trim_filename;
 }
 
-// database io functions
 void itemdb_read(item_t item) {
    if(item.id >= 0) printf("%d,",item.id); else printf(",");   
    printf("%s,",item.aegis);
@@ -348,7 +349,6 @@ void itemdb_writeall(item_w * item_db, char * file) {
    fclose(file_stm);
 }
 
-// generic functions for getting and setting
 int32_t * itemdb_id(void * field) { return &((item_t *)field)->id; return 0; }
 int32_t * itemdb_type(void * field) { return &((item_t *)field)->type; return 0; }
 int32_t * itemdb_buy(void * field) { return &((item_t *)field)->buy; return 0; }

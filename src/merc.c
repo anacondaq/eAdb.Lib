@@ -1,7 +1,35 @@
+/*=============================================================================
+   file: merc.c
+   date: 5/11/2014
+ update: 5/23/2014
+   auth: trickyloki3
+   desc: mercenary database management
+   note: very simple code
+=============================================================================*/
 #include "merc.h"
+static int32_t mercdb_load(FILE * file_stm, void * db_mem, int32_t db_size);
 
-// database loading functions
-int32_t mercdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
+merc_w * mercdb_init(const char * filename) {
+   return (merc_w *) load(filename, trim_numeric, mercdb_load, sizeof(merc_t));
+}
+
+void mercdb_deinit(merc_w * merc_db) {
+   int32_t i = 0;
+   merc_t merc;
+   if(merc_db != NULL) {
+      if(merc_db->db != NULL) {
+         for(i = DB_BEGIN; i < merc_db->size; i++) {
+            merc = merc_db->db[i];
+            if(merc.sprite != NULL) free(merc.sprite);
+            if(merc.name != NULL) free(merc.name);
+         }
+         free(merc_db->db);
+      }
+      free(merc_db);
+   }
+}
+
+static int32_t mercdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
 	merc_t * db = (merc_t *) db_mem;
    int32_t cnt = DB_BEGIN;
    char buf[BUF_SIZE];
@@ -11,14 +39,12 @@ int32_t mercdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
    int32_t data_fld = 0;
 
 	while(fgets(buf, BUF_SIZE, file_stm) != NULL) {
-      // reset reading paramaters
       read_buf = 0;
       read_fld = 0;
       data_fld = 0;
 
-      // read the entry
       while(1) {
-         // check if delimiter for field
+         /* check if delimiter for field */
          if(buf[read_buf] == ',' || buf[read_buf] == '\n' || buf[read_buf] == '\0') {
             fld[read_fld] = '\0';
             switch(data_fld) {
@@ -53,44 +79,33 @@ int32_t mercdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
             read_fld = 0;
             data_fld++;
          } else {
-         	// skip initial whitespace
+         	/* skip initial whitespace */
          	if(!(isspace(buf[read_buf]) && read_fld <= 0)) {
-         		// copy from entry from buffer to field buffer
 		         fld[read_fld] = buf[read_buf];
 		         read_fld++;
 		      }
          }
 
-         // finish reading the item
+         /* finish reading the item */
          if(buf[read_buf] == '\0' || buf[read_buf] == '\n') break;
          read_buf++;
       }
 
-      // check for missing fields
+      /* check for missing fields */
       if(data_fld != MERCENARY_COLUMN) 
          fprintf(stdout,"warn: mercdb_load; missing field expected %d got %d; %s", MERCENARY_COLUMN, data_fld, buf);
+
       cnt++;
+
+      /* check for exceed size of allocated memory */
+      if(cnt > db_size) {
+         fprintf(stdout,"warn: mercdb_load; exceeding the size of the database; %d < %d.\n%s\n", db_size, cnt, buf);
+         exit(EXIT_FAILURE);
+      }
    }
    return cnt;
 }
 
-void mercdb_unload(merc_w * merc_db) {
-   int32_t i = 0;
-   merc_t merc;
-   if(merc_db != NULL) {
-      if(merc_db->db != NULL) {
-         for(i = DB_BEGIN; i < merc_db->size; i++) {
-            merc = merc_db->db[i];
-            if(merc.sprite != NULL) free(merc.sprite);
-            if(merc.name != NULL) free(merc.name);
-         }
-         free(merc_db->db);
-      }
-      free(merc_db);
-   }
-}
-
-// database io functions
 void mercdb_io(merc_t merc, FILE * file_stm) {
 	fprintf(file_stm, "%d,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
 		merc.id, merc.sprite, merc.name, merc.lv, merc.hp, merc.sp, merc.range1, 
@@ -114,7 +129,6 @@ void mercdb_write(merc_w * merc_db, const char * file_name) {
    fclose(file_stm);
 }
 
-// generic functions for getting and setting
 int32_t * mercdb_id(void * field) { return &((merc_t *)field)->id; }
 char * mercdb_sprite(void * field) { return ((merc_t *)field)->sprite; }
 char * mercdb_name(void * field) { return ((merc_t *)field)->name; }

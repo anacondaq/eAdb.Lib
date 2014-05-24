@@ -1,11 +1,35 @@
-// file: produce.c
-// date: 5/11/2014
-// auth: trickyloki3
-// desc: produce database management
+/*=============================================================================
+   file: produce.c
+   date: 5/11/2014
+ update: 5/23/2014
+   auth: trickyloki3
+   desc: produce database management
+   note: very simple code
+=============================================================================*/
 #include "produce.h"
+static int32_t producedb_load(FILE * file_stm, void * db_mem, int32_t db_size);
 
-// database loading functions
-int32_t producedb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
+produce_w * producedb_init(const char * filename) {
+   return (produce_w *) load(filename, trim_numeric, producedb_load, sizeof(produce_t));
+}
+
+void producedb_deinit(produce_w * produce_db) {
+   int32_t i = 0;
+   produce_t produce;
+   if(produce_db != NULL) {
+      if(produce_db->db != NULL) {
+         for(i = DB_BEGIN; i < produce_db->size; i++) {
+            produce = produce_db->db[i];
+            if(produce.material != NULL) free(produce.material);
+            if(produce.amount != NULL) free(produce.amount);
+         }
+         free(produce_db->db);
+      }
+      free(produce_db);
+   }
+}
+
+static int32_t producedb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
 	produce_t * db = (produce_t *) db_mem;
    int32_t cnt = DB_BEGIN;
    char buf[BUF_SIZE];
@@ -18,7 +42,6 @@ int32_t producedb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
    int32_t alternate = 0;
 
 	while(fgets(buf, BUF_SIZE, file_stm) != NULL) {
-      // reset reading paramaters
       read_buf = 0;
       read_fld = 0;
       data_fld = 0;
@@ -26,7 +49,7 @@ int32_t producedb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
       material_cnt = 0;
       alternate = 0;
 
-      // retrieve the total number of materials
+      /* retrieve the total number of materials */
       while(buf[read_buf] != '\0') {
       	if(buf[read_buf] == ',') fld_cnt++;
       	read_buf++;
@@ -35,13 +58,13 @@ int32_t producedb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
       fld_cnt -= PRODUCE_HEADER;
       fld_cnt /= 2;
 
-      // check if fld_cnt is zero
+      /* check if materials exist */
       if(fld_cnt <= 0) {
-      	fprintf(stdout,"warn: producedb_load missing material %s",buf);
+      	fprintf(stdout,"warn: producedb_load missing material or amount %s",buf);
       	continue;
       }
 
-      // allocate memory for material and amount
+      /* allocate memory for material and amount */
       db[cnt].material = malloc(sizeof(int32_t) * fld_cnt);
       if(db[cnt].material == NULL) {
       	fprintf(stdout,"warn: producedb_load failed to allocate memory for material.");
@@ -54,9 +77,8 @@ int32_t producedb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
       }
       db[cnt].count = fld_cnt;
 
-      // read the entry
       while(1) {
-         // check if delimiter for field
+         /* check if delimiter for field */
          if(buf[read_buf] == ',' || buf[read_buf] == '\n' || buf[read_buf] == '\0') {
             fld[read_fld] = '\0';
             switch(data_fld) {
@@ -77,40 +99,29 @@ int32_t producedb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
             read_fld = 0;
             data_fld++;
          } else {
-         	// skip initial whitespace
+         	/* skip initial whitespace */
          	if(!(isspace(buf[read_buf]) && read_fld <= 0)) {
-         		// copy from entry from buffer to field buffer
 		         fld[read_fld] = buf[read_buf];
 		         read_fld++;
 		      }
          }
 
-         // finish reading the item
+         /* finish reading the item */
          if(buf[read_buf] == '\0' || buf[read_buf] == '\n') break;
          read_buf++;
       }
+
       cnt++;
+
+      /* check for exceed size of allocated memory */
+      if(cnt > db_size) {
+         fprintf(stdout,"warn: producedb_load; exceeding the size of the database; %d < %d.\n%s\n", db_size, cnt, buf);
+         exit(EXIT_FAILURE);
+      }
    }
    return cnt;
 }
 
-void producedb_unload(produce_w * produce_db) {
-   int32_t i = 0;
-   produce_t produce;
-   if(produce_db != NULL) {
-      if(produce_db->db != NULL) {
-         for(i = DB_BEGIN; i < produce_db->size; i++) {
-            produce = produce_db->db[i];
-            if(produce.material != NULL) free(produce.material);
-            if(produce.amount != NULL) free(produce.amount);
-         }
-         free(produce_db->db);
-      }
-      free(produce_db);
-   }
-}
-
-// database io functions
 void producedb_io(produce_t produce, FILE * file_stm) {
 	int32_t i;
 	fprintf(file_stm,"%d,%d,%d,%d,", produce.item_id, produce.item_lv, produce.req_skill, produce.req_skill_lv);
@@ -134,7 +145,6 @@ void producedb_write(produce_w * produce_db, const char * file_name) {
    fclose(file_stm);
 }
 
-// generic functions for getting and setting
 int32_t * producedb_item_id(void * field) { return &((produce_t *)field)->item_id; }
 int32_t * producedb_item_lv(void * field) { return &((produce_t *)field)->item_lv; }
 int32_t * producedb_req_skill(void * field) { return &((produce_t *)field)->req_skill; }

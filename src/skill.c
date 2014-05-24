@@ -1,11 +1,43 @@
-// file: skill.c
-// date: 5/10/2014
-// auth: trickyloki3
-// desc: skill database management
+/*=============================================================================
+   file: skill.c
+   date: 5/10/2014
+ update: 5/23/2014
+   auth: trickyloki3
+   desc: skill database management
+   note: very simple code
+=============================================================================*/
 #include "skill.h"
+static int32_t skilldb_load(FILE *, void *, int32_t);
 
-// database loading functions
-int32_t skilldb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
+skill_w * skilldb_init(const char * filename) {
+   return (skill_w *) load(filename, trim_numeric, skilldb_load, sizeof(skill_t));
+}
+
+void skilldb_deinit(skill_w * skill_db) {
+   int32_t i = 0;
+   skill_t skill;
+   if(skill_db != NULL) {
+      if(skill_db->db != NULL) {
+         for(i = DB_BEGIN; i < skill_db->size; i++) {
+            skill = skill_db->db[i];
+            array_unload(skill.range);
+            array_unload(skill.element);
+            array_unload(skill.splash);
+            array_unload(skill.hit_amount);
+            if(skill.cast_cancel != NULL) free(skill.cast_cancel);
+            array_unload(skill.maxcount);
+            if(skill.type != NULL) free(skill.type);
+            array_unload(skill.blow_count);
+            if(skill.name != NULL) free(skill.name);
+            if(skill.desc != NULL) free(skill.desc);
+         }
+         free(skill_db->db);
+      }
+      free(skill_db);
+   }
+}
+
+static int32_t skilldb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
 	skill_t * db = (skill_t *) db_mem;
    int32_t cnt = DB_BEGIN;
    char buf[BUF_SIZE];
@@ -15,14 +47,12 @@ int32_t skilldb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
    int32_t data_fld = 0;
 
 	while(fgets(buf, BUF_SIZE, file_stm) != NULL) {
-      // reset reading paramaters
       read_buf = 0;
       read_fld = 0;
       data_fld = 0;
 
-      // read the entry
       while(1) {
-         // check if delimiter for field
+         /* check if delimiter for field */
          if(buf[read_buf] == ',' || buf[read_buf] == '\n' || buf[read_buf] == '\0') {
             fld[read_fld] = '\0';
             switch(data_fld) {
@@ -49,52 +79,33 @@ int32_t skilldb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
             read_fld = 0;
             data_fld++;
          } else {
-         	// skip initial whitespace
+         	/* skip initial whitespace */
          	if(!(isspace(buf[read_buf]) && read_fld <= 0)) {
-         		// copy from entry from buffer to field buffer
 		         fld[read_fld] = buf[read_buf];
 		         read_fld++;
 		      }
          }
 
-         // finish reading the item
+         /* finish reading the item */
          if(buf[read_buf] == '\0' || buf[read_buf] == '\n') break;
          read_buf++;
       }
 
-      // check for missing fields
+      /* check for missing fields */
       if(data_fld != SKILL_COLUMN) 
          fprintf(stdout,"warn: skilldb_load; missing field expected %d got %d; %s", SKILL_COLUMN, data_fld, buf);
+
       cnt++;
+
+      /* check for exceed size of allocated memory */
+      if(cnt > db_size) {
+         fprintf(stdout,"warn: skilldb_load; exceeding the size of the database; %d < %d.\n%s\n", db_size, cnt, buf);
+         exit(EXIT_FAILURE);
+      }
    }
    return cnt;
 }
 
-void skilldb_unload(skill_w * skill_db) {
-   int32_t i = 0;
-   skill_t skill;
-   if(skill_db != NULL) {
-      if(skill_db->db != NULL) {
-         for(i = DB_BEGIN; i < skill_db->size; i++) {
-            skill = skill_db->db[i];
-            array_unload(skill.range);
-            array_unload(skill.element);
-            array_unload(skill.splash);
-            array_unload(skill.hit_amount);
-            if(skill.cast_cancel != NULL) free(skill.cast_cancel);
-            array_unload(skill.maxcount);
-            if(skill.type != NULL) free(skill.type);
-            array_unload(skill.blow_count);
-            if(skill.name != NULL) free(skill.name);
-            if(skill.desc != NULL) free(skill.desc);
-         }
-         free(skill_db->db);
-      }
-      free(skill_db);
-   }
-}
-
-// database io functions
 void skilldb_io(skill_t skill, FILE * file_stm) {
    fprintf(file_stm,"%d,",skill.id);
    array_io(skill.range, file_stm);
@@ -126,7 +137,6 @@ void skilldb_write(skill_w * skill_db, const char * file_name) {
    fclose(file_stm);
 }
 
-// generic functions for getting and setting
 int32_t * skilldb_id(void * field) { return &((skill_t *)field)->id; }
 char * skilldb_name(void * field) { return ((skill_t *)field)->name; }
 int32_t * skilldb_getint(void * db, int32_t index, DBFIELD field) { return field(&(((skill_t *) db)[index])); }

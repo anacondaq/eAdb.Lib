@@ -1,7 +1,11 @@
-// file: produce.h
-// date: 5/11/2014
-// auth: trickyloki3
-// desc: produce database management
+/*=============================================================================
+   file: produce.h
+   date: 5/11/2014
+ update: 5/23/2014
+   auth: trickyloki3
+   desc: produce database management
+   note: very simple code
+=============================================================================*/
 #ifndef PRODUCE_H
 #define PRODUCE_H
 	#include "util.h"
@@ -9,7 +13,7 @@
 	
 	#define PRODUCE_HEADER 3
 	
-	// produce entry
+	/* produce entry */
 	typedef struct {
 		int32_t item_id;
 		int32_t item_lv;
@@ -20,22 +24,22 @@
 		int32_t count;
 	} produce_t;
 	
-	// produce database
+	/* produce database */
 	typedef struct {
 		produce_t * db;
 		int32_t size;
 	} produce_w;
 	
-	// database loading functions
-	int32_t producedb_load(FILE *, void *, int32_t);
-	void producedb_unload(produce_w *);
+	/* initialize and deinitialize the database */
+	produce_w * producedb_init(const char *);
+	void producedb_deinit(produce_w *);
 
-	// database io functions
+	/* reading and writing the database */
 	void producedb_io(produce_t, FILE *);
 	void producedb_read(produce_w *);
 	void producedb_write(produce_w *, const char *);
 
-	// generic functions for getting and setting
+	/* generic functions for getting and setting */
 	int32_t * producedb_item_id(void *);
 	int32_t * producedb_item_lv(void *);
 	int32_t * producedb_req_skill(void *);

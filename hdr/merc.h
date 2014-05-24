@@ -1,7 +1,11 @@
-// file: merc.h
-// date: 5/11/2014
-// auth: trickyloki3
-// desc: mercenary database management
+/*=============================================================================
+   file: merc.h
+   date: 5/11/2014
+ update: 5/23/2014
+   auth: trickyloki3
+   desc: mercenary database management
+   note: very simple code
+=============================================================================*/
 #ifndef MERCENARY_DB
 #define MERCENARY_DB
 	#include "util.h"
@@ -9,7 +13,7 @@
 	
 	#define MERCENARY_COLUMN 26
 	
-	// mercenary entry
+	/* mercenary entry */
 	typedef struct {
 		int32_t id;
 		char * sprite;
@@ -39,22 +43,22 @@
 		int32_t dmotion;
 	} merc_t;
 
-	// mercenary database
+	/* mercenary database */
 	typedef struct {
 		merc_t * db;
 		int32_t size;
 	} merc_w;
 	
-	// database loading functions
-	int32_t mercdb_load(FILE *, void *, int32_t);
-	void mercdb_unload(merc_w *);
+	/* initialize and deinitialize the database */
+	merc_w * mercdb_init(const char *);
+	void mercdb_deinit(merc_w *);
 
-	// database io functions
+	/* reading and writing the database */
 	void mercdb_io(merc_t, FILE *);
 	void mercdb_read(merc_w *);
 	void mercdb_write(merc_w *, const char *);
 	
-	// generic functions for getting and setting
+	/* generic functions for getting and setting */
 	int32_t * mercdb_id(void *);
 	char * mercdb_sprite(void *);
 	char * mercdb_name(void *);

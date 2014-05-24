@@ -1,107 +1,19 @@
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+/*=============================================================================
+   file: mob.c
+   date: 5/10/2014
+ update: 5/23/2014
+   auth: trickyloki3
+   desc: mob database management
+   note: very simple code
+=============================================================================*/
 #include "mob.h"
+static int32_t mobdb_load(FILE * file_stm, void * db_mem, int32_t db_size);
 
-// database loading functions
-int32_t mobdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
-	mob_t * db = (mob_t *) db_mem;
-   int32_t cnt = DB_BEGIN;
-   char buf[BUF_SIZE];
-   char fld[BUF_SIZE];
-   int32_t read_buf = 0;
-   int32_t read_fld = 0;
-   int32_t data_fld = 0;
-	
-	while(fgets(buf,sizeof(buf),file_stm) != NULL) {
-		read_buf = 0;
-	   read_fld = 0;
-	   data_fld = 0;
-
-		while(1) {
-			if(buf[read_buf] == ',' || buf[read_buf] == '\0') {
-				fld[read_fld] = '\0';
-				switch(data_fld) {
-					case 0: db[cnt].id = convert_integer(fld,10);				break;	// id
-					case 1: db[cnt].sprite = convert_string(fld); 			break;	// sprite
-					case 2: db[cnt].kro = convert_string(fld);				break;	// kRO
-					case 3: db[cnt].iro = convert_string(fld); 				break;	// iRO
-					case 4: db[cnt].lv = convert_integer(fld,10);				break;	// lv
-					case 5: db[cnt].hp = convert_integer(fld,10);				break;	// hp
-					case 6: db[cnt].sp = convert_integer(fld,10);				break;	// sp
-					case 7: db[cnt].exp = convert_integer(fld,10);				break;	// exp
-					case 8: db[cnt].jexp = convert_integer(fld,10);				break;	// jexp
-					case 9: db[cnt].range = convert_integer(fld,10);			break;	// range
-					case 10: db[cnt].atk1 = convert_integer(fld,10);			break;	// atk1
-					case 11: db[cnt].atk2 = convert_integer(fld,10);			break;	// atk2
-					case 12: db[cnt].def = convert_integer(fld,10);				break;	// def
-					case 13: db[cnt].mdef = convert_integer(fld,10);			break;	// mdef
-					case 14: db[cnt].str = convert_integer(fld,10);				break;	// str
-					case 15: db[cnt].agi = convert_integer(fld,10);				break;	// agi
-					case 16: db[cnt].vit = convert_integer(fld,10);				break;	// vit
-					case 17: db[cnt].intr = convert_integer(fld,10);			break;	// intr
-					case 18: db[cnt].dex = convert_integer(fld,10);				break;	// dex
-					case 19: db[cnt].luk = convert_integer(fld,10);				break;	// luk
-					case 20: db[cnt].range2 = convert_integer(fld,10);			break;	// range2
-					case 21: db[cnt].range3 = convert_integer(fld,10);			break;	// range3
-					case 22: db[cnt].scale = convert_integer(fld,10);			break;	// scale
-					case 23: db[cnt].race = convert_integer(fld,10);			break;	// race
-					case 24: db[cnt].element = convert_integer(fld,10);		break;	// element
-					case 25: db[cnt].mode = convert_uinteger(fld,16); 			break;	// mode
-					case 26: db[cnt].speed = convert_integer(fld,10);			break;	// speed
-					case 27: db[cnt].adelay = convert_integer(fld,10);			break;	// adelay
-					case 28: db[cnt].amotion = convert_integer(fld,10);		break;	// amotion
-					case 29: db[cnt].dmotion = convert_integer(fld,10);		break;	// dmotion
-					case 30: db[cnt].mexp = convert_integer(fld,10);			break;	// mexp
-					case 31: data_fld++;
-					//case 31: db[cnt].expper = convert_integer(fld,10);		break;	// expper
-					case 32: db[cnt].mvp1id = convert_integer(fld,10);			break;	// mvp1id
-					case 33: db[cnt].mvp1per = convert_integer(fld,10);		break;	// mvp1per
-					case 34: db[cnt].mvp2id = convert_integer(fld,10);			break;	// mvp2id
-					case 35: db[cnt].mvp2per = convert_integer(fld,10);		break;	// mvp2per
-					case 36: db[cnt].mvp3id = convert_integer(fld,10);			break;	// mvp3id
-					case 37: db[cnt].mvp3per = convert_integer(fld,10);		break;	// mvp3per
-					case 38: db[cnt].drop1id = convert_integer(fld,10);		break;	// drop1id
-					case 39: db[cnt].drop1per = convert_integer(fld,10);		break;	// drop1per
-					case 40: db[cnt].drop2id = convert_integer(fld,10);		break;	// drop2id
-					case 41: db[cnt].drop2per = convert_integer(fld,10);		break;	// drop2per
-					case 42: db[cnt].drop3id = convert_integer(fld,10);		break;	// drop3id
-					case 43: db[cnt].drop3per = convert_integer(fld,10);		break;	// drop3per
-					case 44: db[cnt].drop4id = convert_integer(fld,10);		break;	// drop4id
-					case 45: db[cnt].drop4per = convert_integer(fld,10);		break;	// drop4per
-					case 46: db[cnt].drop5id = convert_integer(fld,10);		break;	// drop5id
-					case 47: db[cnt].drop5per = convert_integer(fld,10);		break;	// drop5per
-					case 48: db[cnt].drop6id = convert_integer(fld,10);		break;	// drop6id
-					case 49: db[cnt].drop6per = convert_integer(fld,10);		break;	// drop6per
-					case 50: db[cnt].drop7id = convert_integer(fld,10);		break;	// drop7id
-					case 51: db[cnt].drop7per = convert_integer(fld,10);		break;	// drop7per
-					case 52: db[cnt].drop8id = convert_integer(fld,10);		break;	// drop8id
-					case 53: db[cnt].drop8per = convert_integer(fld,10);		break;	// drop8per
-					case 54: db[cnt].drop9id = convert_integer(fld,10);		break;	// drop9id
-					case 55: db[cnt].drop9per = convert_integer(fld,10);		break;	// drop9per
-					case 56: db[cnt].dropcardid = convert_integer(fld,10);	break;	// dropcardid
-					case 57: db[cnt].dropcardper = convert_integer(fld,10);	break;	// dropcardper
-					default: fprintf(stdout,"warn: mobdb_load; invalid field column %s in %s", fld, buf); break;
-				}
-				read_fld = 0;
-				data_fld++;
-			} else {
-				fld[read_fld] = buf[read_buf];
-            read_fld++;
-			}
-
-			if(buf[read_buf] == '\0' || buf[read_buf] == '\n') break;
-			read_buf++;
-		}
-
-		if(data_fld != MOB_COLUMNS) 
-         fprintf(stdout,"warn: mobdb_load; missing field expected %d got %d; %s", MOB_COLUMNS, data_fld, buf);
-		cnt++;
-	}
-	return cnt;
+mob_w * mobdb_init(const char * filename) {
+	return (mob_w *) load(filename, trim_numeric, mobdb_load, sizeof(mob_t));
 }
 
-void mobdb_unload(mob_w * mob_db) {
+void mobdb_deinit(mob_w * mob_db) {
 	int32_t i = 0;
 	mob_t mob;
 	if(mob_db != NULL) {
@@ -118,7 +30,115 @@ void mobdb_unload(mob_w * mob_db) {
    }
 }
 
-// database io functions
+static int32_t mobdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
+	mob_t * db = (mob_t *) db_mem;
+   int32_t cnt = DB_BEGIN;
+   char buf[BUF_SIZE];
+   char fld[BUF_SIZE];
+   int32_t read_buf = 0;
+   int32_t read_fld = 0;
+   int32_t data_fld = 0;
+	
+	while(fgets(buf,sizeof(buf),file_stm) != NULL) {
+		read_buf = 0;
+	   read_fld = 0;
+	   data_fld = 0;
+
+		while(1) {
+			if(buf[read_buf] == ',' || buf[read_buf] == '\n' || buf[read_buf] == '\0') {
+				fld[read_fld] = '\0';
+				switch(data_fld) {
+					case 0: db[cnt].id = convert_integer(fld,10);				break;
+					case 1: db[cnt].sprite = convert_string(fld); 				break;
+					case 2: db[cnt].kro = convert_string(fld);					break;
+					case 3: db[cnt].iro = convert_string(fld); 					break;
+					case 4: db[cnt].lv = convert_integer(fld,10);				break;
+					case 5: db[cnt].hp = convert_integer(fld,10);				break;
+					case 6: db[cnt].sp = convert_integer(fld,10);				break;
+					case 7: db[cnt].exp = convert_integer(fld,10);				break;
+					case 8: db[cnt].jexp = convert_integer(fld,10);				break;
+					case 9: db[cnt].range = convert_integer(fld,10);			break;
+					case 10: db[cnt].atk1 = convert_integer(fld,10);			break;
+					case 11: db[cnt].atk2 = convert_integer(fld,10);			break;
+					case 12: db[cnt].def = convert_integer(fld,10);				break;
+					case 13: db[cnt].mdef = convert_integer(fld,10);			break;
+					case 14: db[cnt].str = convert_integer(fld,10);				break;
+					case 15: db[cnt].agi = convert_integer(fld,10);				break;
+					case 16: db[cnt].vit = convert_integer(fld,10);				break;
+					case 17: db[cnt].intr = convert_integer(fld,10);			break;
+					case 18: db[cnt].dex = convert_integer(fld,10);				break;
+					case 19: db[cnt].luk = convert_integer(fld,10);				break;
+					case 20: db[cnt].range2 = convert_integer(fld,10);			break;
+					case 21: db[cnt].range3 = convert_integer(fld,10);			break;
+					case 22: db[cnt].scale = convert_integer(fld,10);			break;
+					case 23: db[cnt].race = convert_integer(fld,10);			break;
+					case 24: db[cnt].element = convert_integer(fld,10);		break;
+					case 25: db[cnt].mode = convert_uinteger(fld,16); 			break;
+					case 26: db[cnt].speed = convert_integer(fld,10);			break;
+					case 27: db[cnt].adelay = convert_integer(fld,10);			break;
+					case 28: db[cnt].amotion = convert_integer(fld,10);		break;
+					case 29: db[cnt].dmotion = convert_integer(fld,10);		break;
+					case 30: db[cnt].mexp = convert_integer(fld,10);			break;
+					case 31: data_fld++;
+					/*case 31: db[cnt].expper = convert_integer(fld,10);		break;	// expper (deprecated in rAthena)*/
+					case 32: db[cnt].mvp1id = convert_integer(fld,10);			break;
+					case 33: db[cnt].mvp1per = convert_integer(fld,10);		break;
+					case 34: db[cnt].mvp2id = convert_integer(fld,10);			break;
+					case 35: db[cnt].mvp2per = convert_integer(fld,10);		break;
+					case 36: db[cnt].mvp3id = convert_integer(fld,10);			break;
+					case 37: db[cnt].mvp3per = convert_integer(fld,10);		break;
+					case 38: db[cnt].drop1id = convert_integer(fld,10);		break;
+					case 39: db[cnt].drop1per = convert_integer(fld,10);		break;
+					case 40: db[cnt].drop2id = convert_integer(fld,10);		break;
+					case 41: db[cnt].drop2per = convert_integer(fld,10);		break;
+					case 42: db[cnt].drop3id = convert_integer(fld,10);		break;
+					case 43: db[cnt].drop3per = convert_integer(fld,10);		break;
+					case 44: db[cnt].drop4id = convert_integer(fld,10);		break;
+					case 45: db[cnt].drop4per = convert_integer(fld,10);		break;
+					case 46: db[cnt].drop5id = convert_integer(fld,10);		break;
+					case 47: db[cnt].drop5per = convert_integer(fld,10);		break;
+					case 48: db[cnt].drop6id = convert_integer(fld,10);		break;
+					case 49: db[cnt].drop6per = convert_integer(fld,10);		break;
+					case 50: db[cnt].drop7id = convert_integer(fld,10);		break;
+					case 51: db[cnt].drop7per = convert_integer(fld,10);		break;
+					case 52: db[cnt].drop8id = convert_integer(fld,10);		break;
+					case 53: db[cnt].drop8per = convert_integer(fld,10);		break;
+					case 54: db[cnt].drop9id = convert_integer(fld,10);		break;
+					case 55: db[cnt].drop9per = convert_integer(fld,10);		break;
+					case 56: db[cnt].dropcardid = convert_integer(fld,10);	break;
+					case 57: db[cnt].dropcardper = convert_integer(fld,10);	break;
+					default: fprintf(stdout,"warn: mobdb_load; invalid field column %s in %s", fld, buf); break;
+				}
+				read_fld = 0;
+				data_fld++;
+			} else {
+				/* skip initial whitespace */
+         	if(!(isspace(buf[read_buf]) && read_fld <= 0)) {
+		         fld[read_fld] = buf[read_buf];
+		         read_fld++;
+		      };
+			}
+
+			/* finish reading the item */
+			if(buf[read_buf] == '\0' || buf[read_buf] == '\n') break;
+			read_buf++;
+		}
+
+		/* check for missing fields */
+		if(data_fld != MOB_COLUMNS)
+         fprintf(stdout,"warn: mobdb_load; missing field expected %d got %d; %s", MOB_COLUMNS, data_fld, buf);
+
+		cnt++;
+
+		/* check for exceed size of allocated memory */
+      if(cnt > db_size) {
+         fprintf(stdout,"warn: mobdb_load; exceeding the size of the database; %d < %d.\n%s\n", db_size, cnt, buf);
+         exit(EXIT_FAILURE);
+      }
+	}
+	return cnt;
+}
+
 void mobdb_io(mob_t mob, FILE *mob_stm) {
 	if(mob_stm == NULL) return;
 	fprintf(mob_stm,"%d,%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,0x%x,%d,%d,%d,%d,%d,"
@@ -154,7 +174,6 @@ void mobdb_write(mob_w * mob_db, const char * file_name) {
 	fclose(file_stm);
 }
 
-// generic functions for getting and setting
 int32_t * mobdb_id(void * field) { return &((mob_t *)field)->id; }
 int32_t * mobdb_lv(void * field) { return &((mob_t *)field)->lv; }
 int32_t * mobdb_hp(void * field) { return &((mob_t *)field)->hp; }

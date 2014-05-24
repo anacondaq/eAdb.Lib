@@ -1,11 +1,37 @@
-// file: pet.c
-// date: 5/11/2014
-// auth: trickyloki3
-// desc: pet database management
+/*=============================================================================
+   file: pet.c
+   date: 5/11/2014
+ update: 5/23/2014
+   auth: trickyloki3
+   desc: pet database management
+   note: very simple code
+=============================================================================*/
 #include "pet.h"
+static int32_t petdb_load(FILE * file_stm, void * db_mem, int32_t db_size);
 
-// database loading functions
-int32_t petdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
+pet_w * petdb_init(const char * filename) {
+   return (pet_w *) load(filename, trim_numeric, petdb_load, sizeof(pet_t));
+}
+
+void petdb_deinit(pet_w * pet_db) {
+   int32_t i = 0;
+   pet_t pet;
+   if(pet_db != NULL) {
+      if(pet_db->db != NULL) {
+         for(i = DB_BEGIN; i < pet_db->size; i++) {
+            pet = pet_db->db[i];
+            if(pet.pet_name != NULL) free(pet.pet_name);
+            if(pet.pet_jname != NULL) free(pet.pet_jname);
+            if(pet.pet_script != NULL) free(pet.pet_script);
+            if(pet.loyal_script != NULL) free(pet.loyal_script);
+         }
+         free(pet_db->db);
+      }
+      free(pet_db);
+   }
+}
+
+static int32_t petdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
 	pet_t * db = (pet_t *) db_mem;
    int32_t cnt = DB_BEGIN;
    char buf[BUF_SIZE];
@@ -16,22 +42,20 @@ int32_t petdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
    int32_t script_level = 0;
 
 	while(fgets(buf, BUF_SIZE, file_stm) != NULL) {
-      // reset reading paramaters
       read_buf = 0;
       read_fld = 0;
       data_fld = 0;
       script_level = 0;
 
-      // read the entry
       while(1) {
-      	// check if entering script
+      	/* check if entering script */
          if(buf[read_buf] == '{')
             script_level++;
-         // check if leaving script
+         /* check if leaving script */
          else if(buf[read_buf] == '}')
             script_level--;
 
-         // check if delimiter for field
+         /* check if delimiter for field */
          if(!script_level && (buf[read_buf] == ',' || buf[read_buf] == '\n' || buf[read_buf] == '\0')) {
             fld[read_fld] = '\0';
             switch(data_fld) {
@@ -62,46 +86,33 @@ int32_t petdb_load(FILE * file_stm, void * db_mem, int32_t db_size) {
             read_fld = 0;
             data_fld++;
          } else {
-         	// skip initial whitespace
+         	/* skip initial whitespace */
          	if(!(isspace(buf[read_buf]) && read_fld <= 0)) {
-         		// copy from entry from buffer to field buffer
 		         fld[read_fld] = buf[read_buf];
 		         read_fld++;
 		      }
          }
 
-         // finish reading the item
+         /* finish reading the item */
          if(buf[read_buf] == '\0' || buf[read_buf] == '\n') break;
          read_buf++;
       }
 
-      // check for missing fields
+      /* check for missing fields */
       if(data_fld != PET_COLUMN) 
          fprintf(stdout,"warn: petdb_load; missing field expected %d got %d; %s", PET_COLUMN, data_fld, buf);
+
       cnt++;
+
+      /* check for exceed size of allocated memory */
+      if(cnt > db_size) {
+         fprintf(stdout,"warn: petdb_load; exceeding the size of the database; %d < %d.\n%s\n", db_size, cnt, buf);
+         exit(EXIT_FAILURE);
+      }
    }
    return cnt;
 }
 
-void petdb_unload(pet_w * pet_db) {
-   int32_t i = 0;
-   pet_t pet;
-   if(pet_db != NULL) {
-      if(pet_db->db != NULL) {
-         for(i = DB_BEGIN; i < pet_db->size; i++) {
-            pet = pet_db->db[i];
-            if(pet.pet_name != NULL) free(pet.pet_name);
-            if(pet.pet_jname != NULL) free(pet.pet_jname);
-            if(pet.pet_script != NULL) free(pet.pet_script);
-            if(pet.loyal_script != NULL) free(pet.loyal_script);
-         }
-         free(pet_db->db);
-      }
-      free(pet_db);
-   }
-}
-
-// database io functions
 void petdb_io(pet_t pet, FILE * file_stm) {
 	fprintf(file_stm, "%d,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%s\n",
 				pet.mob_id, pet.pet_name, pet.pet_jname, pet.lure_id, pet.egg_id, pet.equip_id, pet.food_id, pet.fullness, pet.hungry_delay, 
@@ -124,7 +135,6 @@ void petdb_write(pet_w * pet_db, const char * file) {
 	fclose(file_stm);
 }
 
-// generic functions for getting and setting
 int32_t * petdb_mob_id(void * field) { return &((pet_t *)field)->mob_id; }
 char * petdb_pet_name(void * field) { return ((pet_t *)field)->pet_name; }
 int32_t * petdb_getint(void * db, int32_t index, DBFIELD field) { return field(&(((pet_t *) db)[index])); }

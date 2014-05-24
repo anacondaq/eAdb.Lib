@@ -1,7 +1,11 @@
-// file: pet.h
-// date: 5/11/2014
-// auth: trickyloki3
-// desc: pet database management
+/*=============================================================================
+   file: pet.h
+   date: 5/11/2014
+ update: 5/23/2014
+   auth: trickyloki3
+   desc: pet database management
+   note: very simple code
+=============================================================================*/
 #ifndef PET_H
 #define PET_H
 	#include "util.h"
@@ -9,7 +13,7 @@
 
 	#define PET_COLUMN 22
 
-	// pet entry
+	/* pet entry */
 	typedef struct {
 		int32_t mob_id;
 		char * pet_name;
@@ -35,22 +39,22 @@
 		char * loyal_script;
 	} pet_t;
 	
-	// pet database
+	/* pet database */
 	typedef struct {
 		pet_t * db;
 		int32_t size;
 	} pet_w;
 	
-	// database loading functions
-	int32_t petdb_load(FILE *, void *, int32_t);
-	void petdb_unload(pet_w *);
+	/* initialize and deinitialize the database */
+	pet_w * petdb_init(const char *);
+	void petdb_deinit(pet_w *);
 	
-	// database io functions
+	/* reading and writing the database */
 	void petdb_io(pet_t, FILE *);
 	void petdb_read(pet_w *);
 	void petdb_write(pet_w *, const char *);
 	
-	// generic functions for getting and setting
+	/* generic functions for getting and setting */
 	int32_t * petdb_mob_id(void *);
 	char * petdb_pet_name(void * field);
 	int32_t * petdb_getint(void *, int32_t, DBFIELD);

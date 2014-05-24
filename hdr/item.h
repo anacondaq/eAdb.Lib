@@ -1,14 +1,18 @@
-// file: item.h
-// date: 5/7/2014
-// auth: trickyloki3
-// desc: item database management
+/*=============================================================================
+   file: item.h
+   date: 5/7/2014
+ update: 5/23/2014
+   auth: trickyloki3
+   desc: item database management
+   note: very simple code
+=============================================================================*/
 #ifndef ITEM_H
 #define ITEM_H
    #include "util.h"
 
    #define ITEM_COLUMNS        22
 
-   // item entry
+   /* item entry */
    typedef struct {
       int32_t id;
       char * aegis;
@@ -35,23 +39,23 @@
       char * onunequip;
    } item_t;
 
-   // item database
+   /* item database */
    typedef struct {
       item_t * db;
       int32_t size;
    } item_w;
 
-   // database loading functions
-   item_w * itemdb_load(const char *);
-   item_w * itemdb_unload(item_w *);
+   /* initialize and deinitialize the database */
+   item_w * itemdb_init(const char *);
+   item_w * itemdb_deinit(item_w *);
 
-   // database io functions
+   /* reading and writing the database */
    void itemdb_read(item_t);
    void itemdb_readall(item_w *);
    void itemdb_write(item_t, FILE *);
    void itemdb_writeall(item_w *, char *);
 
-   // generic functions for getting and setting
+   /* generic functions for getting and setting */
    int32_t * itemdb_id(void *);
    int32_t * itemdb_type(void *);
    int32_t * itemdb_buy(void *);
