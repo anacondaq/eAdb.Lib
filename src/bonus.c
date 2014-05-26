@@ -7,9 +7,9 @@
    note: very simple code
 =============================================================================*/
 #include "bonus.h"
-static char * bonusdb_trim(const char *, const char *, int *, int);
+static char * bonusdb_trim(const char *, const char *, int *);
 
-bonus_w * bonusdb_init(const char * filename, const char * prefix, int field_count) {
+bonus_w * bonusdb_init(const char * filename, const char * prefix) {
    /* bonus wrapper data */
    bonus_w * bonus_wrapper = NULL;
    bonus_t * bonus_database = NULL;
@@ -21,15 +21,15 @@ bonus_w * bonusdb_init(const char * filename, const char * prefix, int field_cou
    FILE * bonus_file = NULL;
    char bonus_buf[BUF_SIZE];                 /* item buffer */
    char bonus_fld[BUF_SIZE];                 /* field buffer */
-   char bonus_fmt[BUF_SIZE];                 /* temp buffer for string format */
    int32_t read_buf = 0;                     /* current item buffer index */
    int32_t read_fld = 0;                     /* current item field index */
-   int32_t read_fmt = 0;                     /* current format character */
    int32_t quote_level = 0;                  /* string literal enclosed in quotes */
    int32_t field_level = 0;
-
+   int32_t var_state = 0;
+   int32_t type_cnt = 0;
+   int32_t order_cnt = 0;
    /* filter the database for valid entries per line */
-   bonus_filename = bonusdb_trim(filename, prefix, &bonus_size, field_count);
+   bonus_filename = bonusdb_trim(filename, prefix, &bonus_size);
    if(bonus_filename == NULL) {
       fprintf(stdout,"warn: bonusdb_load failed to filter original database file %s\n", filename);
       return NULL;
@@ -49,6 +49,7 @@ bonus_w * bonusdb_init(const char * filename, const char * prefix, int field_cou
       if(bonus_filename != NULL) free(bonus_filename);
       return NULL;
    }
+   memset(bonus_database,0,sizeof(bonus_t) * (bonus_size + DB_BEGIN));
 
    /* open filtered database for reading */
    bonus_file = fopen(bonus_filename, "r");
@@ -63,18 +64,11 @@ bonus_w * bonusdb_init(const char * filename, const char * prefix, int field_cou
    while(fgets(bonus_buf, BUF_SIZE, bonus_file) != NULL) {
       read_buf = 0;
       read_fld = 0;
-      read_fmt = 0;
       quote_level = 0;
       field_level = 0;
-
-      /* initialize bonus entry */
-      bonus_database[bonus_count].pref = NULL;
-      bonus_database[bonus_count].name = NULL;
-      bonus_database[bonus_count].attr = 0;
-      bonus_database[bonus_count].spec = 0;
-      bonus_database[bonus_count].desc = NULL;
-      bonus_database[bonus_count].argc = field_count - BONUS_FIELD_HEADER;
-      bonus_database[bonus_count].argv = NULL;
+      var_state = 0;
+      type_cnt = 0;
+      order_cnt = 0;
 
       /* read the bonus entry */
       while(1) {
@@ -89,12 +83,26 @@ bonus_w * bonusdb_init(const char * filename, const char * prefix, int field_cou
          if(!quote_level && (isspace(bonus_buf[read_buf]) || bonus_buf[read_buf] == ',' || bonus_buf[read_buf] == ';' || bonus_buf[read_buf] == '\0')) {
             bonus_fld[read_fld] = '\0';
             switch(field_level) {
-               case 0:   bonus_database[bonus_count].pref = convert_string(bonus_fld); break;
-               case 1:   bonus_database[bonus_count].name = convert_string(bonus_fld); break;
-               case 2:   bonus_database[bonus_count].attr = convert_integer(bonus_fld, 10); break;
-               case 3:   bonus_database[bonus_count].spec = convert_integer(bonus_fld, 10); break;
-               case 4:   bonus_database[bonus_count].desc = convert_string(bonus_fld); break;
-               default:  bonus_fmt[read_fmt++] = bonus_fld[0]; break;
+               case 0: bonus_database[bonus_count].pref = convert_string(bonus_fld); break;
+               case 1: bonus_database[bonus_count].buff = convert_string(bonus_fld); break;
+               case 2: bonus_database[bonus_count].attr = convert_integer(bonus_fld, 16); break;
+               case 3: bonus_database[bonus_count].desc = convert_string(bonus_fld); break;
+               case 4: bonus_database[bonus_count].type_cnt = convert_integer(bonus_fld, 10); 
+                       bonus_database[bonus_count].type = malloc(sizeof(int32_t) * bonus_database[bonus_count].type_cnt);
+                       break;
+               default: 
+                  if(var_state < bonus_database[bonus_count].type_cnt) {
+                     bonus_database[bonus_count].type[type_cnt] = bonus_fld[0];
+                     var_state++;
+                     type_cnt++;
+                  } else if(bonus_database[bonus_count].order == NULL) {
+                     bonus_database[bonus_count].order_cnt = convert_integer(bonus_fld, 10); 
+                     bonus_database[bonus_count].order = malloc(sizeof(int32_t) * bonus_database[bonus_count].order_cnt);
+                  } else {
+                     bonus_database[bonus_count].order[order_cnt] = convert_integer(bonus_fld, 10); 
+                     order_cnt++;
+                  }
+                  break;
             }
             read_fld = 0;
             field_level++;
@@ -111,19 +119,6 @@ bonus_w * bonusdb_init(const char * filename, const char * prefix, int field_cou
          if(bonus_buf[read_buf] == '\0' || bonus_buf[read_buf] == '\n' || bonus_buf[read_buf] == ';') break;
          read_buf++;
       }
-
-      /* set the bonus argument list */
-      bonus_database[bonus_count].argv = malloc(sizeof(char) * (bonus_database[bonus_count].argc + 1));
-      if(bonus_database[bonus_count].argv == NULL) {
-         fprintf(stdout,"warn: bonusdb_load failed to allocate memory for bonus argument list.");
-      } else {
-         bonus_fmt[read_fmt] = '\0';
-         strncpy(bonus_database[bonus_count].argv, bonus_fmt, bonus_database[bonus_count].argc + 1);
-      }
-
-      /* check for missing fields */
-      if(field_level != field_count) 
-         fprintf(stdout,"warn: missing field expected %d got %d from %s: %s", field_count, field_level, filename, bonus_buf);
 
       /* check for missing brackets */
       if(quote_level)
@@ -152,9 +147,10 @@ bonus_w * bonusdb_deinit(bonus_w * bonus_db) {
          for(i = DB_BEGIN; i < bonus_db->size; i++) {
             bonus = bonus_db->db[i];
             if(bonus.pref != NULL) free(bonus.pref);
-            if(bonus.name != NULL) free(bonus.name);
+            if(bonus.buff != NULL) free(bonus.buff);
             if(bonus.desc != NULL) free(bonus.desc);
-            if(bonus.argv != NULL) free(bonus.argv);
+            if(bonus.type != NULL) free(bonus.type);
+            if(bonus.order != NULL) free(bonus.order);
          }
          free(bonus_db->db);
       }
@@ -165,9 +161,11 @@ bonus_w * bonusdb_deinit(bonus_w * bonus_db) {
 
 void bonusdb_io(bonus_t bonus, FILE * file_stm) {
    int32_t i;
-   fprintf(file_stm,"%s %s,%d,%d,%s,",bonus.pref, bonus.name, bonus.attr, bonus.spec, bonus.desc);
-   for(i = 0; i < bonus.argc - 1; i++) fprintf(file_stm,"%c,",bonus.argv[i]);
-   fprintf(file_stm,"%c;\n",bonus.argv[i]);
+   fprintf(file_stm,"%s %s,0x%02x,%s,%d,",bonus.pref, bonus.buff, bonus.attr, bonus.desc, bonus.type_cnt);
+   for(i = 0; i < bonus.type_cnt; i++) fprintf(file_stm,"%c,",bonus.type[i]);
+   fprintf(file_stm,"%d,",bonus.order_cnt);
+   for(i = 0; i < bonus.order_cnt - 1; i++) fprintf(file_stm,"%d,",bonus.order[i]);
+   fprintf(file_stm,"%d;\n",bonus.order[i]);
 }
 
 void bonusdb_read(bonus_w * bonus_db) {
@@ -187,7 +185,7 @@ void bonusdb_write(bonus_w * bonus_db, char * file) {
    fclose(file_stm);
 }
 
-static char * bonusdb_trim(const char * filename, const char * prefix, int * size, int field_count) {
+static char * bonusdb_trim(const char * filename, const char * prefix, int * size) {
    char * trim_filename = NULL;
    FILE * bonusdb_file = NULL;
    FILE * bonusdb_trim = NULL;
@@ -195,8 +193,6 @@ static char * bonusdb_trim(const char * filename, const char * prefix, int * siz
 
    char bonus_buf[BUF_SIZE];
    char bonus_fld[BUF_SIZE];
-   int32_t quote_level = 0;
-   int32_t field_level = 0;
    int32_t i = 0;
 
    /* check if paramaters are valid */
@@ -230,32 +226,8 @@ static char * bonusdb_trim(const char * filename, const char * prefix, int * siz
       if(strlen(bonus_fld) >= strlen(prefix))
          if(bonus_buf[0] != '/')
             if(ncs_strcmp(prefix, bonus_fld) == 0) {
-               /* check missing fields and unmatch quotes */
-               quote_level = 0;
-               field_level = 0;
-               
-               for(i = 0; bonus_buf[i] != '\0'; i++)
-                  if(bonus_buf[i] == '\"' && !quote_level)
-                     quote_level++;
-                  else if(bonus_buf[i] == '\"' && quote_level)
-                     quote_level--;
-                  else if((bonus_buf[i] == ',' || isspace(bonus_buf[i])) && !quote_level) {
-                     field_level++;
-                     /* skip all other whitespace */
-                     while(isspace(bonus_buf[i+1]) && bonus_buf[i+1] != '\0') i++;
-                  } else if(bonus_buf[i] == ';' && !quote_level) {
-                     field_level++;
-                     break;
-                  }
-
-               if(quote_level)
-                  fprintf(stdout,"warn: bonusdb_trim missing quote %s: %s", filename, bonus_buf);
-               else if(field_level != field_count)
-                  fprintf(stdout,"warn: bonusdb_trim missing field expect %d but got %d | %s: %s", field_count, field_level, filename, bonus_buf);
-               else {
-                  fprintf(bonusdb_trim, "%s",bonus_buf);
-                  bonusdb_size++;
-               }
+               fprintf(bonusdb_trim, "%s",bonus_buf);
+               bonusdb_size++;
             }
    }
 
@@ -266,9 +238,8 @@ static char * bonusdb_trim(const char * filename, const char * prefix, int * siz
 }
 
 char * bonusdb_pref(void * field) { return ((bonus_t *)field)->pref; }
-char * bonusdb_name(void * field) { return ((bonus_t *)field)->name; }
+char * bonusdb_buff(void * field) { return ((bonus_t *)field)->buff; }
 int * bonusdb_attr(void * field) { return &((bonus_t *)field)->attr; }
-int * bonusdb_spec(void * field) { return &((bonus_t *)field)->spec; }
 int * bonusdb_getint(void * db, int index, DBFIELD field) { return field(&(((bonus_t *) db)[index])); }
 char * bonusdb_getstr(void * db, int index, DBFIELD_STR field) { return field(&(((bonus_t *) db)[index])); }
 int bonusdb_getsizeof(void) { return sizeof(bonus_t); }

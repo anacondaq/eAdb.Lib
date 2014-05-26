@@ -9,13 +9,6 @@
 #ifndef BONUS_H
 #define BONUS_H
    #include "util.h"
-   
-   #define BONUS_FIELD_HEADER   5    /* subtract from the below macro for number of arguments */
-   #define BONUS1_FIELD_COUNT   6
-   #define BONUS2_FIELD_COUNT   7
-   #define BONUS3_FIELD_COUNT   8
-   #define BONUS4_FIELD_COUNT   9
-   #define BONUS5_FIELD_COUNT   10
 
    /* item bonus attributes */
    #define STAT_ATTR 1 
@@ -33,13 +26,14 @@
 
    /* bonus entry */
    typedef struct {
-      char * pref;         /* bonus prefix, i.e. bonus, bonus2, .. */
-      char * name;         /* bonus identifier */
-      int32_t attr;        /* categorize bonus by type */
-      int32_t spec;        /* special argument handling by compiler */
-      char * desc;         /* base string for translation by compile */
-      int32_t argc;        /* number of argument specifiers */
-      char * argv;         /* argument specifiers */
+      char * pref;         /* bonus prefix, i.e. bonus, bonus2, etc. */
+      char * buff;         /* bonus buff, i.e. bStr, bAgi, etc. */
+      int32_t attr;        /* bonus category */
+      char * desc;         /* bonus format string */
+      int32_t * type;      /* bonus argument type */
+      int32_t type_cnt;
+      int32_t * order;     /* bonus order for each type */
+      int32_t order_cnt;
    } bonus_t;
    
    /* bonus database */
@@ -49,7 +43,7 @@
    } bonus_w;
 
    /* initialize and deinitialize the database */
-   bonus_w * bonusdb_init(const char *, const char *, int);
+   bonus_w * bonusdb_init(const char *, const char *);
    bonus_w * bonusdb_deinit(bonus_w *);
 
    /* reading and writing the database */

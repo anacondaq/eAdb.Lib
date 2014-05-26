@@ -23,9 +23,6 @@ all: tester
 tester: proj/tester.c $(OBJ)
 	$(CCompiler) -o $@ $(CFlags) $^ $(HDRDIR)
 
-reader: app/eAdb.Compiler/reader.c $(OBJ) $(EADB_COMPILER_OBJ)
-	$(CCompiler) -o $@ $(CFlags) $^ $(HDRDIR) $(EADB_HDRDIR)
-
 $(EADB_OBJDIR)%.o: $(EADB_SRCDIR)%.c
 	$(CCompiler) -c -o $@ $(CFlags) $^ $(HDRDIR) $(EADB_HDRDIR)
 
